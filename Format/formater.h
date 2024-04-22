@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 #include <fstream>
 
 using namespace std;
@@ -23,11 +24,7 @@ private:
 
     fstream partition;
 
-
-    int create_partition_file();
-    int expand_file_size(int n);
-
-    int define_boot_record(char partition_name[8], int sectors_per_cluster = 1, int bytes_per_sector = 512);
+    int define_boot_record(int sectors_per_cluster = 1, int bytes_per_sector = 512);
     int calc_root_entries();
     int reset_reserved_partitions();
     int reset_root_dir();
@@ -35,10 +32,18 @@ private:
 
     int get_root_dir_in_clusters();
 public:
-    formater(string archive_name, int archive_sive);
+    formater();
     formater(const formater& F);
     ~formater();
+    int create_partition_file();
+    int expand_file_size(int n);
 
     int archive_is_open();
-    int format_partition(char partition_name[8], int sectors_per_cluster = 1, int bytes_per_sector = 512);
+    int format_partition(int sectors_per_cluster = 1, int bytes_per_sector = 512);
+    
+    void set_filename(string filename);
+    void set_file_size(int filesize);
+    void set_partition_name(char partition_name[8]);
+
+    void write_test(string text);
 };

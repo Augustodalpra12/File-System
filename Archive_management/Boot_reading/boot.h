@@ -30,4 +30,5 @@ public:
     int get_root_entry_count();
     int get_bitmap_in_clusters();
 
+
 }__attribute__((packed));

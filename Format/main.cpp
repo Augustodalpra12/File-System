@@ -1,82 +1,87 @@
+#include "formater.h"
 #include <iostream>
 #include <fstream>
 
 using namespace std;
 
-struct boot_record
+// REFATORA ISSO ANTES DE ENVIAR POR QUE TA MUITO FEIO JESUS CRISTO AMADO
+
+int main()
 {
-    char[8] partition_name
-    int bytes_per_sector;
-    int sector_per_cluster;
-    int root_entries;
-    int bitmap_size;
-}__attribute__((packed));
-
-class formater
-{
-private:
-    boot_record boot;
-    int partition_size_in_bytes;
-
-    FILE partition;
-
-public:
-    formater();
-    ~formater();
-
-    int define_boot_record(char[8] partition_name, int partition_size, int sector_per_cluster = 1, int bytes_per_sector = 512);
-    int calc_root_entries();
-    int reset_reserved_partitions();
-    int reset_root_dir();
-    int set_bitmap();
-};
-
-formater::format(FILE archive)
-{
-    partition = archive;
-    partition.seekp(0);
-}
-
-formater::~format()
-{
-
-}
-
-int formater::define_boot_record(char[8] partition_name, int partition_size, int sector_per_cluster = 1, int bytes_per_sector = 512)
-{
-    boot.partition_name = partition_name;
-    boot.bytes_per_sector = bytes_per_sector;
-    boot.sector_per_cluster = sector_per_cluster;
-    boot.root_entries = calc_root_entries(int partition_size);
-}
-
-int formater::calc_root_entries(int partition_size)
-{
-    
-}
-    
-int formater::reset_reserved_partitions()
-{
-    reset_root_dir();
-    set_bitmap();
-
-}
-
-int formater::reset_root_dir()
-{
-    for (int i = 0; i < root_entries; i++)
+    formater new_disk = create_new_disk();
+    if(!new_disk.archive_is_open())
     {
-        // Write 0xFF on the first byte, don't touch the rest
-        // Move 32 bytes forward
+        cout << "Error creating the archive" << endl;
+        return 0;
+
     }
+    cout << "Insert a name for the disk partition with a maximum of 8 characters: " << endl;
+    char partition_name[8];
+    cin.get(partition_name, 8);
+
+    cout << "Do you want to especify a size for the sectors? y/n" << endl;
+    char response;
+    do
+    {
+        cin >> response;
+
+    } while (!(response == 'y' || response == 'n'));
+
+    int bytes_per_sector = 512;
+    if (response == 'y')
+    {
+        cout << "How many bytes will a sector have?" << endl;
+        cin >> bytes_per_sector;
+    }
+
+    cout << "Do you want to especify how many sectors per cluster? y/n" << endl;
+    do
+    {
+        cin >> response;
+    } while (!(response == 'y' || response == 'n'));
+
+    int sectors_per_cluster = 1;
+    if (response == 'y')
+    {
+        cout << "How many sectors will a cluster have?" << endl;
+        cin >> sectors_per_cluster;
+    }
+
+    cout << "Formatando partição";
+    new_disk.format_partition(partition_name, sectors_per_cluster, bytes_per_sector);
+
+    return 0;
 }
 
-int formater::set_bitmap()
+formater create_new_disk()
 {
-    int root_in_clusters = (root_entries * 32) / sector
-    for (size_t i = 0; i < count; i++)
-    {
-        /* code */
-    }
+    string filename = get_file_name();
+    int file_size_mb = get_file_size();
+
+    formater newDisk(filename, file_size_mb);
+    return newDisk;
+}
+
+string get_file_name()
+{
+    cout << "Insert the name of the new file: " << endl;
+    string filename;
+    cin >> filename;
+
+    filename += ".img";
+    
+    return filename;
+}
+
+int get_file_size()
+{
+    cout << "Inser the size of the partition (in mb): " << endl;
+    int file_size_mb;
+    cin >> file_size_mb;
+
+    return file_size_mb;
+}
+
+char* get_partition_name(){
 
 }

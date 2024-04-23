@@ -6,48 +6,40 @@ using namespace std;
 
 // REFATORA ISSO ANTES DE ENVIAR POR QUE TA MUITO FEIO JESUS CRISTO AMADO
 
+struct partition_name
+{
+    char name[8];
+};
+
+
 string get_file_name()
 {
+    string full_name = "..\\";
     cout << "Insert the name of the new file: " << endl;
     string filename;
     cin >> filename;
 
-    filename += ".img";
+    full_name += filename;
+    full_name += ".img";
     
-    return filename;
+    return full_name;
 }
 
 int get_file_size()
 {
-    cout << "Insert the size of the partition (in mb): " << endl;
     int file_size_mb;
+    cout << "Insert the size of the partition (in mb): " << endl;
     cin >> file_size_mb;
 
     return file_size_mb;
 }
 
-int create_new_disk(formater new_disk)
-{
-    string filename = get_file_name();
-    int file_size_mb = get_file_size();
-
-    new_disk.set_filename(filename);
-    if(!new_disk.create_partition_file())
-    {
-        return 0;
-    }
-
-    new_disk.set_file_size(file_size_mb);
-    new_disk.expand_file_size(file_size_mb);
-    return 1;
-}
-
-void get_partition_name(formater new_disk)
+partition_name get_partition_name()
 {
     cout << "Insert the name of the partition: " << endl;
-    char partition_name[8];
-    cin >> partition_name;
-    new_disk.set_partition_name(partition_name);
+    partition_name partition_name;
+    cin >> partition_name.name;
+    return partition_name;
 }
 
 int response_is_valid(char response)
@@ -94,26 +86,25 @@ int specify_sector_per_cluster()
 
 int main()
 {
-    formater new_disk;
-
-    if(!create_new_disk(new_disk))
+    formater new_disk(get_file_name());
+    if(!new_disk.archive_is_open())
     {
-        cout << "Error creating the archive" << endl;
+        cout << "Error creating the file" << endl;
         return 0;
     }
 
-    get_partition_name(new_disk);
+    new_disk.set_file_size(get_file_size());
+    new_disk.expand_file_size();
 
+    partition_name partition = get_partition_name();
+
+    new_disk.set_partition_name(partition.name);
 
     int sectors_per_cluster = specify_sector_per_cluster();
     int bytes_per_sector = specify_bytes_per_sector();
-
-    new_disk.write_test("Hello World");
     
-    cout << "Formatando partição";
+    cout << "Formatando partição" << endl;
     new_disk.format_partition(sectors_per_cluster, bytes_per_sector);
-
-    new_disk.~formater();
 
     return 0;
 }

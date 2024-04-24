@@ -60,7 +60,7 @@ int formater::define_boot_record(int sectors_per_cluster, int bytes_per_sector)
     boot.bytes_per_sector = bytes_per_sector;
     boot.sectors_per_cluster = sectors_per_cluster;
     boot.root_entries = calc_root_entries();
-    boot.bitmap_size = calc_bitmap_size(); //Separe this in a function -> ceil(ceil(partition_size/bytes_per_sector)/sectors_per_cluster);
+    boot.bitmap_size_in_clusters = calc_bitmap_size();
 
     return 0;
 }
@@ -74,15 +74,20 @@ int formater::calc_root_entries()
 
 int formater::calc_bitmap_size()
 {
-    int bitmap_size_in_bytes = ceil(ceil(partition_size_in_bytes/(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster))) / 8);
+    float bytes_per_cluster = boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster);
 
-    return ceil(bitmap_size_in_bytes/(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster)));
+    int partition_total_clusters = floor(partition_size_in_bytes/bytes_per_cluster);
+
+    int bitmap_size_in_bytes = ceil(partition_total_clusters / 8.0);
+
+    int bitmap_in_cluster = ceil(bitmap_size_in_bytes/bytes_per_cluster);
+
+    return bitmap_in_cluster;
 }
     
 int formater::reset_reserved_partitions()
 {
     reset_root_dir();
-    cout << "Resetting root dir." << endl;
     set_bitmap();
 
     return 0;
@@ -94,9 +99,7 @@ int formater::reset_root_dir()
     char invalid = static_cast<char>(stoi("FF", nullptr, 16));
     for (int i = 0; i < boot.root_entries; i++)
     {
-        // Write 0xFF on the first byte, don't touch the rest
         partition.write(&invalid, 1);
-        // Move 32 bytes forward
         partition.seekp(31, ios::cur);
     }
     return 0;
@@ -106,27 +109,53 @@ int formater::set_bitmap()
 {
     int bitmap_start = boot.bytes_per_sector * (root_in_sectors + 1);
     
-    partition.close();
-
-    partition.open(archive_name, ios::out | ios::binary);
-    
     partition.seekp(bitmap_start, ios::beg);
 
+    int reserved_clusters = ceil((root_in_sectors + 1) / static_cast<int>(boot.sectors_per_cluster)) + boot.bitmap_size_in_clusters;
     
-
-    int reserved_clusters = ceil((root_in_sectors + 1) / static_cast<float>(boot.sectors_per_cluster)) + boot.bitmap_size;
-    int i = 0;
-    for (i; i < reserved_clusters; i++)
+    if (reserved_clusters > 8)
     {
-        // Inserir estes setores como preenchidos
+        write_occupied_bytes(reserved_clusters);
+    }
+    
+    int leftover_bits = reserved_clusters%8;
+    if (leftover_bits)
+    {
+        write_remaining_bits(leftover_bits);
     }
 
-    for (i; i < 3; i++) // 3 Vai ser substituido pela quantidade total de clusters do disco.
-    {
+    int total_cluster_quantity = ceil(floor(partition_size_in_bytes/(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster)))/8);
 
+    partition.seekp(bitmap_start, ios::beg); // Vai pro começo do bitmap
+    partition.seekp((total_cluster_quantity), ios::cur); // Vai pro final da parte útil do bitmap
+
+    char one = 255;
+    int size = (boot.bitmap_size_in_clusters*(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster))) - total_cluster_quantity - 1; // Pega o tamanho do bitmap e ve o espaço que ta sobrando no cluster
+    // NÃO TA FAZENDO CERTO ISSO, TA CORTANDO UM BYTE NO FINAL, PERCA DE 1 A 8 CLUSTERS
+    for (int i = 0; i < size; i++)
+    {
+        partition.write(&one, 1);
+    }
+    
+    return 0;
+}
+
+int formater::write_occupied_bytes(int reserved_clusters)
+{
+    int bytes_to_write = reserved_clusters/8;
+    char full_byte = static_cast<char>(stoi("FF", nullptr, 16));
+    for (int i = 0; i < bytes_to_write; i++)
+    {
+        partition.write(&full_byte, 1);
     }
 
-    // Um novo for preenchendo o espaço vazio ao final do cluster do bitmap colocando todos esses espaços, que no caso são invalidos, como preenchidos.
+    return 0;
+}
+
+int formater::write_remaining_bits(int leftover_clusters)
+{
+    char bits_to_write = static_cast<char>(255 - (pow(2, leftover_clusters - 1)));
+    partition.write(&bits_to_write, 1);
     return 0;
 }
 
@@ -137,7 +166,6 @@ void formater::set_filename(string filename)
 
 void formater::set_file_size(int filesize)
 {
-    cout << "Filesize on the formater: " << filesize << endl;
     partition_size_in_bytes = filesize;
 }
 

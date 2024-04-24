@@ -12,7 +12,7 @@ struct boot_record
     unsigned short bytes_per_sector;
     unsigned char sectors_per_cluster;
     unsigned short root_entries;
-    unsigned int bitmap_size;
+    unsigned int bitmap_size_in_clusters;
 }__attribute__((packed));
 
 class formater
@@ -36,6 +36,8 @@ private:
     int reset_root_dir();
 
     int set_bitmap();
+    int write_occupied_bytes(int reserved_clusters);
+    int write_remaining_bits(int leftover_clusters);
 
     int get_root_dir_in_sectors();
 public:

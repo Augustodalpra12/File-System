@@ -109,10 +109,10 @@ int formater::set_bitmap()
 {
     int bitmap_start = boot.bytes_per_sector * (root_in_sectors + 1);
     
-    partition.seekp(bitmap_start, ios::beg);
 
     int reserved_clusters = ceil((root_in_sectors + 1) / static_cast<int>(boot.sectors_per_cluster)) + boot.bitmap_size_in_clusters;
-    
+
+    partition.seekp(bitmap_start, ios::beg);
     if (reserved_clusters > 8)
     {
         write_occupied_bytes(reserved_clusters);
@@ -130,7 +130,7 @@ int formater::set_bitmap()
     partition.seekp((total_cluster_quantity), ios::cur); // Vai pro final da parte útil do bitmap
 
     char one = 255;
-    int size = (boot.bitmap_size_in_clusters*(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster))) - total_cluster_quantity - 1; // Pega o tamanho do bitmap e ve o espaço que ta sobrando no cluster
+    int size = (boot.bitmap_size_in_clusters*(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster))) - total_cluster_quantity; // Pega o tamanho do bitmap e ve o espaço que ta sobrando no cluster
     // NÃO TA FAZENDO CERTO ISSO, TA CORTANDO UM BYTE NO FINAL, PERCA DE 1 A 8 CLUSTERS
     for (int i = 0; i < size; i++)
     {
@@ -143,7 +143,7 @@ int formater::set_bitmap()
 int formater::write_occupied_bytes(int reserved_clusters)
 {
     int bytes_to_write = reserved_clusters/8;
-    char full_byte = static_cast<char>(stoi("FF", nullptr, 16));
+    char full_byte = 255;
     for (int i = 0; i < bytes_to_write; i++)
     {
         partition.write(&full_byte, 1);
@@ -154,7 +154,9 @@ int formater::write_occupied_bytes(int reserved_clusters)
 
 int formater::write_remaining_bits(int leftover_clusters)
 {
-    char bits_to_write = static_cast<char>(255 - (pow(2, leftover_clusters - 1)));
+    char mask = (~0 << (8 - leftover_clusters));
+    char bits_to_write = 255 & mask;
+
     partition.write(&bits_to_write, 1);
     return 0;
 }
@@ -185,5 +187,10 @@ void formater::write_test(string text)
 
 void formater::write_boot_record()
 {
-    partition.write((char*)&boot, sizeof(boot));
+    // partition.write((char*)&boot, sizeof(boot)); // Não ta funcionando, escrevendo lixo(?????????)
+    partition.write((char*)&boot.partition_name, 8);
+    partition.write((char*)&boot.bytes_per_sector, 2);
+    partition.write((char*)&boot.sectors_per_cluster, 1);
+    partition.write((char*)&boot.root_entries, 2);
+    partition.write((char*)&boot.bitmap_size_in_clusters, 4);
 }

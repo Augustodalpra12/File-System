@@ -29,7 +29,7 @@ public:
     void print_first_cluster();
     void print_file_size();
     void print_file_name();
-    void print_archive_info()
+    void print_archive_info();
 
     int get_data_type();
     int get_time_created();

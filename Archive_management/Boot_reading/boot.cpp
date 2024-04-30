@@ -3,6 +3,14 @@
 boot_record::boot_record(){
     
 }
+
+boot_record::boot_record(const boot_record& boot){
+    strcpy(this->partition_name, boot.partition_name);
+    this->bytes_per_sector = boot.bytes_per_sector;
+    this->sectors_per_cluster = boot.sectors_per_cluster;
+    this->root_entry_count = boot.root_entry_count;
+    this->bitmap_in_clusters = boot.bitmap_in_clusters;
+}
 boot_record::boot_record(FILE* file){
     this->read_boot_record(file);
 }

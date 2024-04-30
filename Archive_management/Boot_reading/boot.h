@@ -1,4 +1,5 @@
 #include <string>
+#include <cstring>
 #include <iostream>
 using namespace std;
 
@@ -14,6 +15,7 @@ private:
 public:
 
     boot_record();
+    boot_record(const boot_record& boot);
     ~boot_record();
     boot_record(FILE* file);
     void read_boot_record(FILE* file);

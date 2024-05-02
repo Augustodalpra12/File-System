@@ -26,7 +26,7 @@ private:
     int check_available_clusters();
     int count_free_bits(int index, char byte);
 
-    NODE* serach_neadeed_clusters();
+    NODE* search_neadeed_clusters();
     int set_occupied_bits();
     int bitmap_position_to_cluster(int bit);
 

@@ -5,11 +5,19 @@ data_write::data_write(boot_record boot, FILE* file)
     this->partition = file;
     get_file_size();
     this->boot = boot;
-    
+    int cluster_size_in_bytes = (boot.get_bytes_per_sector() * boot.get_sectors_per_cluster());
+    int count = 0;
+    NODE aux;
     if (!check_available_clusters())
         return;
-    
-
+    while(aux.next != NULL){
+        fseek(this->partition, aux.cluster_number, SEEK_SET);
+        // talvez ele fique escrevendo o inicio toda hora, decidir se apagamos o inicio do file ou outra forma de fazer
+        fwrite(this->file_to_copy+(cluster_size_in_bytes*count), cluster_size_in_bytes - 4, 1, this->partition);
+        fwrite(&aux.next, sizeof(NODE), 1, this->partition);
+        aux = *aux.next;
+        count++;
+    }
 }
 
 data_write::~data_write()
@@ -165,13 +173,15 @@ void data_write::set_filename()
 {
 
 }
+// temos o arquivo, queremos copiar
 
 void data_write::write_file()
 {
     string full_file;
-    fread(&full_file, 512, 1, file_to_copy);
 
+    fread(&full_file, sizeof(full_file), 1, file_to_copy);
     cout << full_file << endl;
+
 }
 
 int data_write::flip_bit(int mode, int position)

@@ -31,5 +31,8 @@ int main(int argc, char const *argv[])
     boot.print_sectors_per_cluster();
     boot.print_root_entry_count();
     boot.print_bitmap_in_clusters();
+
+
+    data_write data(boot, partition);
     return 0;
 }

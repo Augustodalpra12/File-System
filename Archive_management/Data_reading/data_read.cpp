@@ -1,4 +1,5 @@
 #include "data_read.h"
+#include <climits>
 
 data_read::data_read(/* args */)
 {
@@ -8,12 +9,14 @@ data_read::~data_read()
 {
 }
 
-data_read::data_read(FILE* file)
+data_read::data_read(FILE* partition)
 {
-    this->read_data(file);
+    string filename;
+    cout << "Enter file name: " << endl;
+    cin >> filename;
+    int archive = search_data(partition, filename);
+    read_data(partition, archive);
 }
-
-
 
 void data_read::print_data_type(){
     cout << "Data type: " << this->data_type << endl;
@@ -87,11 +90,11 @@ string data_read::get_file_name(){
     return this->file_name;
 }
 
-int search_data(FILE* file, string name){
+int data_read::search_data(FILE* partition, string name){
     int archive = 0;
     while(1){
-        fseek(file, 513+(sizeof(data_read)*archive), SEEK_SET);
-        fread(this, sizeof(data_read), 1, file);
+        fseek(partition, 513+(sizeof(data_read)*archive), SEEK_SET);
+        fread(this, sizeof(data_read), 1, partition);
         if(this->file_name == name){
             return archive;
         }
@@ -99,13 +102,13 @@ int search_data(FILE* file, string name){
     }
 }
 
-void data_read::read_all_files(FILE* file){
+void data_read::read_all_files(FILE* partition){
     boot_record boot;
-    boot.read_boot_record(file);
+    boot.read_boot_record(partition);
     int root_directories_entries = boot.get_root_entry_count();
     while(root_directories_entries){ 
-        fseek(file, 513+(sizeof(data_read)*root_directories_entries), SEEK_SET);
-        fread(this, sizeof(data_read), 1, file);
+        fseek(partition, 513+(sizeof(data_read)*root_directories_entries), SEEK_SET);
+        fread(this, sizeof(data_read), 1, partition);
         if(this->data_type == '0xFF') {
             print_archive_info();
         }
@@ -125,30 +128,29 @@ void data_read::print_archive_info(){
     print_file_size();
     print_file_name();
 }
-void data_read::read_data(FILE* file, int archive){
-    fseek(file, 513+(sizeof(data_read)*archive), SEEK_SET);
-    fread(this, sizeof(data_read), 1, file);
+void data_read::read_data(FILE* partition, int archive){
+    fseek(partition, 513+(sizeof(data_read)*archive), SEEK_SET);
+    fread(this, sizeof(data_read), 1, partition);
 }
 
-void data_read::read_archive(FILE* file){
+void data_read::read_archive(FILE* partition){
     boot_record boot;
     int cluster_size = boot.get_sectors_per_cluster()*boot.get_bytes_per_sector();
     int first_cluster = this->get_first_cluster();
-    fseek(file, ((boot.get_root_entry_count()*32)+512)+(boot.get_bitmap_in_clusters()*cluster_size)+(first_cluster*(cluster_size)), SEEK_SET);
+    fseek(partition, ((boot.get_root_entry_count()*32)+512)+(boot.get_bitmap_in_clusters()*cluster_size)+(first_cluster*(cluster_size)), SEEK_SET);
     char data[cluster_size-4];
-    char pointer[4];
+    int pointer;
     cout << " ---------------- DADOS ------------------" << endl;
     while(1){
-        fread(data, sizeof(cluster_size-4), 1, file);
-        fread(pointer, sizeof(4), 1, file);
-        int pointer_int = std::stoi(pointer, nullptr, 16);
+        fread(data, sizeof(cluster_size-4), 1, partition);
+        fread(&pointer, sizeof(4), 1, partition);
         for(int i = 0; i < this->get_file_size(); i++){
             cout << data[i];
         }
-        if(pointer == "0xFF"){
+        if(pointer == UINT_MAX){
             break;
         }
-        fseek(file, ((boot.get_root_entry_count()*32)+512)+(boot.get_bitmap_in_clusters()*cluster_size)+(pointer_int*(cluster_size)), SEEK_SET);
+        fseek(partition, ((boot.get_root_entry_count()*32)+512)+(boot.get_bitmap_in_clusters()*cluster_size)+(pointer*(cluster_size)), SEEK_SET);
 
     }
     cout << " ------------------------------------------------" << endl;

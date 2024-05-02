@@ -29,7 +29,7 @@ public:
     void print_first_cluster();
     void print_file_size();
     void print_file_name();
-    void print_archive_info()
+    void print_archive_info();
 
     int get_data_type();
     int get_time_created();
@@ -41,6 +41,9 @@ public:
     int get_file_size();
     string get_file_name(); 
 
+
+    int search_data(FILE* file, string name);
+    void read_archive(FILE* file);
     void read_all_files(FILE* file);
 
 }__attribute__((packed));

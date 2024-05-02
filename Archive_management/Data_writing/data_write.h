@@ -13,9 +13,11 @@ struct NODE
 class data_write
 {
 private:
-    FILE* file;
+    FILE* partition;
+    FILE* file_to_copy;
     string file_name;
     int file_size;
+    int bitmap_start;
     NODE file_clusters;
     boot_record boot;
 
@@ -41,12 +43,14 @@ private:
     void set_file_size();
     void set_filename();
 
+    void write_file();
+
     int flip_bit(int mode, int position);
 
     void add_cluster(int cluster_number);
 
 public:
-    data_write(boot_record boot, FILE* file);
+    data_write(boot_record boot, FILE* partition);
     ~data_write();
 
 };

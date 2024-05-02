@@ -1,3 +1,5 @@
+#ifndef DATA_READ_H
+#define DATA_READ_H
 #include <string>
 #include <iostream>
 #include "../Boot_reading/boot.h"
@@ -44,3 +46,5 @@ public:
     void read_all_files(FILE* file);
 
 }__attribute__((packed));
+
+#endif

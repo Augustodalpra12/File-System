@@ -1,3 +1,5 @@
+#ifndef DATA_WRITE_H
+#define DATA_WRITE_H
 #include <string>
 #include <iostream>
 #include <cmath>
@@ -54,3 +56,5 @@ public:
     ~data_write();
 
 };
+
+#endif

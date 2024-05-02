@@ -1,3 +1,5 @@
+#ifndef BOOT_H
+#define BOOT_H
 #include <string>
 #include <cstring>
 #include <iostream>
@@ -34,3 +36,5 @@ public:
 
 
 }__attribute__((packed));
+
+#endif

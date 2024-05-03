@@ -1,7 +1,7 @@
 #include "./Boot_reading/boot.h"
 #include "./Data_writing/data_write.h"
-#include "./Data_reading/data_read.h"
-// g++ main.cpp .\Boot_reading\boot.cpp .\Data_reading\data_read.cpp .\Data_writing\data_write.cpp -O main.cpp
+// #include "./Data_reading/data_read.h"
+// g++ main.cpp .\Boot_reading\boot.cpp .\Data_reading\data_read.cpp .\Data_writing\data_write.cpp -o main.cpp
 
 int main(int argc, char const *argv[])
 {

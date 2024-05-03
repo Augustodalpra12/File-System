@@ -3,14 +3,19 @@
 data_write::data_write(boot_record boot, FILE* file)
 {
     this->partition = file;
-    get_file_size();
     this->boot = boot;
+    this->file_clusters.cluster_number = -1;
+    this->file_clusters.next = NULL;
+
+    get_file();
+    cout << "File name: " << this->file_name << endl;
+    get_file_size();
+    cout << "File size: " << this->file_size << endl;
 
     if (!check_available_clusters())
         return;
     
-    set_occupied_bits();
-    get_filename();
+    // set_occupied_bits();
     write_file();
 }
 
@@ -21,9 +26,9 @@ data_write::~data_write()
 
 void data_write::get_file_size()
 {
-    fseek(this->partition, 0, SEEK_END);
-    this->file_size = ftell(this->partition);
-    fseek(this->partition, 0, SEEK_SET);
+    fseek(this->file_to_copy, 0, SEEK_END);
+    this->file_size = ftell(this->file_to_copy);
+    fseek(this->file_to_copy, 0, SEEK_SET);
 }
 
 int data_write::check_available_clusters()
@@ -31,9 +36,10 @@ int data_write::check_available_clusters()
     int clusters_needed = ceil(this->file_size/((this->boot.get_bytes_per_sector()*this->boot.get_sectors_per_cluster()) - 4.0)); // Tamanho de cada cluster -4 bytes para endereçamento do próximo cluster
 
     int root_in_sectors = ceil((this->boot.get_root_entry_count() * 32.0) / this->boot.get_bytes_per_sector());
-    int root_and_boot_clusters = ceil(root_in_sectors + 1.0)/this->boot.get_sectors_per_cluster();
+    int root_and_boot_clusters = ceil((root_in_sectors)/this->boot.get_sectors_per_cluster());
     
     bitmap_start = boot.get_bytes_per_sector() * root_and_boot_clusters;
+
     fseek(this->partition, bitmap_start, SEEK_SET);
 
     int clusters_found = 0;
@@ -43,11 +49,16 @@ int data_write::check_available_clusters()
     do
     {
         fread(&byte, sizeof(byte), 1, this->partition);
-        if (byte != 255)
-            clusters_found += count_free_bits(i, byte);
-        
+        if (byte != -1)
+        {
+            cout << "found space on the " << i+1 << " byte" << endl;
+            clusters_found += count_free_bits(i, byte, clusters_needed-clusters_found);
+        }
+
         i++;
-    } while (i < bitmap_size && clusters_found < clusters_needed);
+    } while (clusters_found < clusters_needed && i < bitmap_size);
+
+    cout << "Clusters found:" << clusters_found << endl;
 
     if (clusters_found < clusters_needed)
     {
@@ -56,10 +67,9 @@ int data_write::check_available_clusters()
     }
 
     return 1;
-
 }
 
-int data_write::count_free_bits(int index, char byte)
+int data_write::count_free_bits(int index, char byte, int spaces_needed)
 {
     int count = 0; 
 
@@ -74,12 +84,15 @@ int data_write::count_free_bits(int index, char byte)
     bit[0] = byte & 0b10000000;
 
     for (int i = 0; i < 8; i++)
-    {
-        if (bit[i])
+    {                    
+        if (!bit[i])
         {
             count++;
             add_cluster((index*8) + i);
         }
+
+        if (count == spaces_needed)
+            break;
     }
     
     return count;
@@ -87,17 +100,25 @@ int data_write::count_free_bits(int index, char byte)
 
 void data_write::add_cluster(int cluster_number)
 {
+    if (this->file_clusters.cluster_number == -1)
+    {
+        this->file_clusters.cluster_number = cluster_number;    
+        return;
+    }
+
     NODE aux;
     NODE* end;
     aux.cluster_number = cluster_number;
     aux.next = NULL;
 
     end = &this->file_clusters;
-    while (end->next != NULL)
+    
+    while (end != NULL)
     {
         end = end->next;
     }
-    end->next = &aux;
+
+    end = &aux;
 
 }
 
@@ -109,27 +130,44 @@ int data_write::set_occupied_bits()
         flip_bit(1, cluster->cluster_number);
         cluster = cluster->next;
     }
+    return 0;
 }
 
 int data_write::bitmap_position_to_cluster(int bit)
 {
 
+    return 0;
 }
 
 int data_write::cluster_to_bitmap_position(int cluster_number)
 {
 
+    return 0;
 }
 
 int data_write::get_file()
 {
     get_filename();
     file_to_copy = fopen(file_name.c_str(), "r");
+    if (file_to_copy == NULL)
+    {
+        cout << "File not found" << endl;
+        return 0;
+    }
+
+
+    while (file_name.size() > 10)
+    {
+        cout << "Enter a new name for the file" << endl;
+        cin >> this->file_name;
+    }
+    
+    return 1;
 }
 
 void data_write::get_filename()
 {
-    cout << "Rename the file: ";
+    cout << "Insert the name of the file to copy: ";
     cin >> file_name;
 }
 

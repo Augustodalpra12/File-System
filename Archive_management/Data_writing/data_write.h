@@ -23,12 +23,12 @@ private:
     NODE file_clusters;
     boot_record boot;
 
+    void get_filename();
     void get_file_size();
 
     int check_available_clusters();
-    int count_free_bits(int index, char byte);
+    int count_free_bits(int index, char byte, int spaces_needed);
 
-    NODE* search_neadeed_clusters();
     int set_occupied_bits();
     int bitmap_position_to_cluster(int bit);
 
@@ -36,7 +36,6 @@ private:
 
     int get_file();
 
-    void get_filename();
     void set_data_type(int data_type);
     void set_creation();
     void set_last_access();

@@ -60,6 +60,13 @@ int data_write::check_available_clusters()
 
     cout << "Clusters found:" << clusters_found << endl;
 
+    NODE* aux = &file_clusters;
+    while (aux != NULL)
+    {
+        cout << aux->cluster_number << endl;
+        aux = aux->next;
+    }    
+
     if (clusters_found < clusters_needed)
     {
         cout << "Not enough space" << endl;
@@ -100,6 +107,7 @@ int data_write::count_free_bits(int index, char byte, int spaces_needed)
 
 void data_write::add_cluster(int cluster_number)
 {
+    cout << "Cluster number: " << cluster_number << endl;
     if (this->file_clusters.cluster_number == -1)
     {
         this->file_clusters.cluster_number = cluster_number;    
@@ -109,17 +117,18 @@ void data_write::add_cluster(int cluster_number)
     NODE aux;
     NODE* end;
     aux.cluster_number = cluster_number;
-    aux.next = NULL;
+    aux.next = nullptr;
 
     end = &this->file_clusters;
-    
-    while (end != NULL)
+    while (end->next != nullptr)
     {
         end = end->next;
     }
 
-    end = &aux;
+    cout << "end cluster number " << end->cluster_number << endl;
+    cout << "aux cluster number " << aux.cluster_number << endl;
 
+    end->next = &aux;
 }
 
 int data_write::set_occupied_bits()
@@ -209,22 +218,23 @@ void data_write::set_filename()
 
 void data_write::write_file()
 {
-    string full_file;
+    int cluster_size = (boot.get_sectors_per_cluster() * boot.get_bytes_per_sector()) - 4;
+    char full_file[cluster_size];
 
-    fread(&full_file, 10, 1, file_to_copy);
-    cout << full_file << endl;
+    int bytes_read = 0;
 
-    // NODE* aux = &this->file_clusters;
-    // int cluster_size_in_bytes = (boot.get_bytes_per_sector() * boot.get_sectors_per_cluster());
-    // int count = 0;
-    // while(aux != NULL){
-    //     fseek(this->partition, aux->cluster_number, SEEK_SET);
-    //     // talvez ele fique escrevendo o inicio toda hora, decidir se apagamos o inicio do file ou outra forma de fazer
-    //     fwrite(this->file_to_copy+(cluster_size_in_bytes*count), cluster_size_in_bytes - 4, 1, this->partition);
-    //     fwrite(&aux->next, sizeof(NODE), 1, this->partition);
-    //     aux = aux->next;
-    //     count++;
-    // }
+    while (bytes_read < this->file_size)
+    {
+        fread(&full_file, cluster_size, 1, file_to_copy);
+        bytes_read += cluster_size;
+
+        if (bytes_read > this->file_size)
+        {
+            full_file[cluster_size - (bytes_read - this->file_size)] = '\0';
+        }
+
+        // cout << full_file << endl;
+    }
 }
 
 int data_write::flip_bit(int mode, int position)

@@ -22,7 +22,7 @@ private:
     int root_in_sectors;
 
     int bitmap_start;
-    int partition_size_in_bytes;
+    long partition_size_in_bytes;
     string archive_name;
 
     fstream partition;
@@ -56,4 +56,4 @@ public:
 
     void write_test(string text);
     void write_boot_record();
-};
+};//0x001A1A40

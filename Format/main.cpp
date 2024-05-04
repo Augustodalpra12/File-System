@@ -27,7 +27,7 @@ string get_file_name()
 
 int get_file_size()
 {
-    int file_size_mb;
+    long file_size_mb;
     cout << "Insert the size of the partition (in mb): " << endl;
     cin >> file_size_mb;
 

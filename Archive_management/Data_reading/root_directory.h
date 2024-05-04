@@ -1,10 +1,12 @@
-#ifndef DATA_READ_H
-#define DATA_READ_H
 #include <string>
 #include <iostream>
 #include "../Boot_reading/boot.h"
+#include <map>
+#include <climits>
+
 using namespace std;
-class data_read
+map<int, string> root_directory_map;
+class root_directory
 {
 private:
     char data_type;
@@ -16,12 +18,13 @@ private:
     int first_cluster;
     int file_size;
     char file_name[13];
-public:
-    data_read(/* args */);
-    ~data_read();
-    data_read(FILE* file);
 
-    void read_data(FILE* file, int archive);
+public:
+    root_directory(/* args */);
+    ~root_directory();
+    root_directory(FILE *file);
+
+    void read_data(FILE *file, int archive);
     void print_data_type();
     void print_time_created();
     void print_date_created();
@@ -41,10 +44,10 @@ public:
     int get_date_modified();
     int get_first_cluster();
     int get_file_size();
-    string get_file_name(); 
+    string get_file_name();
 
-    void read_all_files(FILE* file);
+    int search_data(FILE *file, string name);
+    void read_archive(FILE *file);
+    void read_all_files(FILE *file);
 
-}__attribute__((packed));
-
-#endif
+} __attribute__((packed));

@@ -71,8 +71,6 @@ int data_write::check_available_clusters()
     
     bitmap_start = boot.get_bytes_per_sector() * root_and_boot_clusters;
 
-    cout << "Bitmap Start: " << bitmap_start << endl;
-
     fseek(this->partition, bitmap_start, SEEK_SET);
 
     int clusters_found = 0;
@@ -83,17 +81,14 @@ int data_write::check_available_clusters()
     {
         fread(&byte, sizeof(byte), 1, this->partition);
         if (byte != -1)
-        {
-            cout << "found space on the " << i+1 << " byte" << endl;
             clusters_found += count_free_bits(i, byte, clusters_needed-clusters_found);
-        }
 
         i++;
     } while (clusters_found < clusters_needed && i < bitmap_size);
 
     if (clusters_found < clusters_needed)
     {
-        cout << "Not enough space" << endl;
+        cerr << "Not enough space" << endl;
         return 0;
     }
 
@@ -175,8 +170,6 @@ int data_write::write_on_root()
     int root_start = (boot.get_sectors_per_cluster() * boot.get_bytes_per_sector());
     fseek(this->partition, root_start, SEEK_SET);
 
-    cout << "Writing on root" << endl;
-
     if(!search_root_space())
     {
         cerr << "No space available on root" << endl;
@@ -210,9 +203,12 @@ int data_write::search_root_space()
     for (int i = 0; i < root_entries; i++)
     {
         fread(&type, sizeof(char), 1, this->partition);
-        cout << static_cast<int>(type) << endl;
         if(type == -1)
+        {
+            fseek(this->partition, -1, SEEK_CUR);
             return 1;
+        }
+
         fseek(this->partition, 31, SEEK_CUR);
     }
     return 0;

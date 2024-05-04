@@ -16,13 +16,43 @@ data_write::data_write(boot_record boot, FILE* file)
         return;
     
     set_occupied_bits();
-    add_cluster(0);
+    add_cluster(0); // Adding a final cluster pointing to 0, for us it means to nothing
     write_file();
+
+    if (!write_on_root())
+        return;
+    
+
 }
 
 data_write::~data_write()
 {
 
+}
+
+int data_write::get_file()
+{
+    get_filename();
+    file_to_copy = fopen(file_name.c_str(), "r");
+    if (file_to_copy == NULL)
+    {
+        cerr << "File not found" << endl;
+        return 0;
+    }
+
+    while (file_name.size() > 10)
+    {
+        cout << "Enter a new name for the file ";
+        cin >> this->file_name;
+    }
+    
+    return 1;
+}
+
+void data_write::get_filename()
+{
+    cout << "Insert the name of the file to copy: ";
+    cin >> file_name;
 }
 
 void data_write::get_file_size()
@@ -34,7 +64,7 @@ void data_write::get_file_size()
 
 int data_write::check_available_clusters()
 {
-    int clusters_needed = ceil(this->file_size/((this->boot.get_bytes_per_sector()*this->boot.get_sectors_per_cluster()) - 4.0)); // Tamanho de cada cluster -4 bytes para endereçamento do próximo cluster
+    int clusters_needed = ceil(this->file_size/((this->boot.get_bytes_per_sector()*this->boot.get_sectors_per_cluster()))); // Tamanho de cada cluster -4 bytes para endereçamento do próximo cluster
 
     int root_in_sectors = ceil((this->boot.get_root_entry_count() * 32.0) / this->boot.get_bytes_per_sector());
     int root_and_boot_clusters = ceil((root_in_sectors)/this->boot.get_sectors_per_cluster());
@@ -97,28 +127,6 @@ int data_write::count_free_bits(int index, char byte, int spaces_needed)
     return count;
 }
 
-void data_write::add_cluster(int cluster_number)
-{
-    if (this->file_clusters.cluster_number == -1)
-    {
-        this->file_clusters.cluster_number = cluster_number;    
-        return;
-    }
-
-    NODE* aux = new NODE;
-    NODE* end;
-    aux->cluster_number = cluster_number;
-    aux->next = NULL;
-
-    end = &this->file_clusters;
-    while (end->next != NULL)
-    {
-        end = end->next;
-    }
-
-    end->next = aux;
-}
-
 int data_write::set_occupied_bits()
 {
     NODE* cluster = &this->file_clusters;
@@ -129,79 +137,6 @@ int data_write::set_occupied_bits()
     }
     return 0;
 }
-
-int data_write::bitmap_position_to_cluster(int bit)
-{
-
-    return 0;
-}
-
-int data_write::cluster_to_bitmap_position(int cluster_number)
-{
-
-    return 0;
-}
-
-int data_write::get_file()
-{
-    get_filename();
-    file_to_copy = fopen(file_name.c_str(), "r");
-    if (file_to_copy == NULL)
-    {
-        cout << "File not found" << endl;
-        return 0;
-    }
-
-    while (file_name.size() > 10)
-    {
-        cout << "Enter a new name for the file ";
-        cin >> this->file_name;
-    }
-    
-    return 1;
-}
-
-void data_write::get_filename()
-{
-    cout << "Insert the name of the file to copy: ";
-    cin >> file_name;
-}
-
-void data_write::set_data_type(int data_type)
-{
-
-}
-
-void data_write::set_creation()
-{
-
-}
-
-void data_write::set_last_access()
-{
-
-}
-
-void data_write::set_modification()
-{
-
-}
-
-void data_write::set_first_cluster()
-{
-
-}
-
-void data_write::set_file_size()
-{
-
-}
-
-void data_write::set_filename()
-{
-
-}
-// temos o arquivo, queremos copiar
 
 void data_write::write_file()
 {
@@ -231,6 +166,122 @@ void data_write::write_file()
 
         cluster = cluster->next;
     }
+}
+
+int data_write::write_on_root()
+{
+    int root_start = (boot.get_sectors_per_cluster() * boot.get_bytes_per_sector());
+    fseek(this->partition, root_start, SEEK_SET);
+
+    cout << "Writing on root" << endl;
+
+    if(!search_root_space())
+    {
+        cerr << "No space available on root" << endl;
+        return 0;
+    }
+
+    set_data_type(19);
+
+    tm* today = get_now();
+
+    Date_Hour today_packed;
+
+    today_packed.date = pack_date(today->tm_year + 1900, today->tm_mon + 1, today->tm_mday);
+    today_packed.time = pack_time(today->tm_hour, today->tm_min, today->tm_sec);
+
+    set_creation(today_packed);
+    set_last_access(today_packed);
+    set_modification(today_packed);
+
+    set_first_cluster();
+    set_file_size();
+    set_filename();
+
+    return 1;
+}
+
+int data_write::search_root_space()
+{
+    int root_entries = this->boot.get_root_entry_count();
+    char type;
+    for (int i = 0; i < root_entries; i++)
+    {
+        fread(&type, sizeof(char), 1, this->partition);
+        cout << static_cast<int>(type) << endl;
+        if(type == -1)
+            return 1;
+        fseek(this->partition, 31, SEEK_CUR);
+    }
+    return 0;
+}
+
+void data_write::set_data_type(char data_type)
+{
+    fwrite(&data_type, sizeof(char), 1, this->partition);
+}
+
+tm* data_write::get_now()
+{
+    time_t now = time(nullptr);
+    tm* today = localtime(&now);
+
+    return today;
+}
+
+void data_write::set_creation(Date_Hour today)
+{
+    fwrite(&today.time, sizeof(short), 1, this->partition);
+    fwrite(&today.date, sizeof(short), 1, this->partition);
+}
+
+void data_write::set_last_access(Date_Hour today)
+{
+    fwrite(&today.date, sizeof(short), 1, this->partition);
+}
+
+void data_write::set_modification(Date_Hour today)
+{
+    fwrite(&today.time, sizeof(short), 1, this->partition);
+    fwrite(&today.date, sizeof(short), 1, this->partition);
+}
+
+void data_write::set_first_cluster()
+{
+    int first_cluster = this->file_clusters.cluster_number;
+    fwrite(&first_cluster, sizeof(int), 1, this->partition);
+}
+
+void data_write::set_file_size()
+{
+    fwrite(&this->file_size, sizeof(int), 1, this->partition);
+}
+
+void data_write::set_filename()
+{
+    fwrite(this->file_name.c_str(), sizeof(char), this->file_name.size(), this->partition);
+}
+
+void data_write::add_cluster(int cluster_number)
+{
+    if (this->file_clusters.cluster_number == -1)
+    {
+        this->file_clusters.cluster_number = cluster_number;    
+        return;
+    }
+
+    NODE* aux = new NODE;
+    NODE* end;
+    aux->cluster_number = cluster_number;
+    aux->next = NULL;
+
+    end = &this->file_clusters;
+    while (end->next != NULL)
+    {
+        end = end->next;
+    }
+
+    end->next = aux;
 }
 
 int data_write::flip_bit(int mode, int position)
@@ -290,4 +341,39 @@ int data_write::flip_bit(int mode, int position)
     fwrite(&byte, sizeof(byte), 1, this->partition);
 
     return 1;
+}
+
+short data_write::pack_date(int year, int month, int day)
+{
+    short packed_date = 0;
+    packed_date |= ((year - 2000) & 0x7F) << 9; // Representa 
+    packed_date |= (month & 0xF) << 5;
+    packed_date |= (day & 0x1F);
+
+    return packed_date;
+}
+
+short data_write::pack_time(int hour, int minute, int second)
+{
+    short packed_hour = 0;
+    packed_hour |= (hour & 0x1F) << 11;
+    packed_hour |= (minute & 0x3F) << 5;
+
+    int sec = second / 2;
+
+    packed_hour |= (sec & 0x1F);
+
+    return packed_hour;
+}
+
+int data_write::bitmap_position_to_cluster(int bit)
+{
+
+    return 0;
+}
+
+int data_write::cluster_to_bitmap_position(int cluster_number)
+{
+
+    return 0;
 }

@@ -14,14 +14,14 @@ int main(int argc, char const *argv[])
     FILE* partition;
     filename += aux;
 
-    partition = fopen(filename.c_str(), "rb");
+    partition = fopen(filename.c_str(), "r+b");
     while (partition == NULL)
     {
         cout << "File not found. Enter a valid file name" << endl;
         cin >> aux;
         filename = "../";
         filename += aux;
-        partition = fopen(filename.c_str(), "rb");
+        partition = fopen(filename.c_str(), "r+b");
     }
 
     boot_record boot;

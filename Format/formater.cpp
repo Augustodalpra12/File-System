@@ -68,7 +68,7 @@ int formater::define_boot_record(int sectors_per_cluster, int bytes_per_sector)
 int formater::calc_root_entries()
 {
     int root_entries = (partition_size_in_bytes/(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster)) - 3);
-    root_in_sectors = ceil((root_entries * 32) / boot.bytes_per_sector);
+    root_in_sectors = ceil((root_entries * 32.0) / boot.bytes_per_sector);
     return root_entries;
 }
 

@@ -67,9 +67,11 @@ int data_write::check_available_clusters()
     int clusters_needed = ceil(this->file_size/((this->boot.get_bytes_per_sector()*this->boot.get_sectors_per_cluster()))); // Tamanho de cada cluster -4 bytes para endereçamento do próximo cluster
 
     int root_in_sectors = ceil((this->boot.get_root_entry_count() * 32.0) / this->boot.get_bytes_per_sector());
-    int root_and_boot_clusters = ceil((root_in_sectors)/this->boot.get_sectors_per_cluster());
+    int root_and_boot_clusters = ceil((root_in_sectors + 1.0)/this->boot.get_sectors_per_cluster());
     
     bitmap_start = boot.get_bytes_per_sector() * root_and_boot_clusters;
+
+    cout << "Bitmap Start: " << bitmap_start << endl;
 
     fseek(this->partition, bitmap_start, SEEK_SET);
 

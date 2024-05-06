@@ -3,8 +3,15 @@
 #include "../Boot_reading/boot.h"
 #include <map>
 #include <climits>
+#include <ctime>
 
 using namespace std;
+
+struct Date_Hour
+{
+    short date;
+    short time;
+};
 
 struct root_directory
 {
@@ -41,6 +48,10 @@ public:
     void print_file_size();
     void print_file_name();
     void print_archive_info();
+    void update_last_access(FILE *partition);
+    short pack_date(int year, int month, int day);
+    short pack_time(int hour, int minute, int second);
+    void set_last_access(Date_Hour today);
 
     int get_data_type();
     int get_time_created();
@@ -51,6 +62,7 @@ public:
     int get_first_cluster();
     int get_file_size();
     string get_file_name();
+    tm *get_now();
 
     int search_data(FILE *file, string name);
     void read_archive(FILE *file);

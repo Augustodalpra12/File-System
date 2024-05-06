@@ -22,6 +22,10 @@ void data_delete ::delete_file(FILE *partition)
     int archiveIndex;
     cin >> archiveIndex;
     cout << endl;
+
+    fseek(partition, 513 + (sizeof(root) * archiveIndex), SEEK_SET);
+    fread(this, sizeof(root), 1, partition);
+    // duvida vai pegar o root do delete ou do read?
     get_file_clusters(partition);
     free_bitmap(partition);
 

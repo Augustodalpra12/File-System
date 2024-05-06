@@ -18,6 +18,51 @@ root_read::root_read(FILE *partition)
     read_data(partition, archive);
 }
 
+tm *root_read::get_now()
+{
+    time_t now = time(nullptr);
+    tm *today = localtime(&now);
+
+    return today;
+}
+void root_read::update_last_access(FILE *partition)
+{
+    tm *today = get_now();
+    Date_Hour today_packed;
+    today_packed.date = pack_date(today->tm_year + 1900, today->tm_mon + 1, today->tm_mday);
+    today_packed.time = pack_time(today->tm_hour, today->tm_min, today->tm_sec);
+}
+
+short root_read::pack_date(int year, int month, int day)
+{
+    short packed_date = 0;
+    packed_date |= ((year - 2000) & 0x7F) << 9; // Representa
+    packed_date |= (month & 0xF) << 5;
+    packed_date |= (day & 0x1F);
+
+    return packed_date;
+}
+
+short root_read::pack_time(int hour, int minute, int second)
+{
+    short packed_hour = 0;
+    packed_hour |= (hour & 0x1F) << 11;
+    packed_hour |= (minute & 0x3F) << 5;
+
+    int sec = second / 2;
+
+    packed_hour |= (sec & 0x1F);
+
+    return packed_hour;
+}
+
+// void root_read::set_last_access(Date_Hour today)
+// {
+//     this->root->last_access = today.date;
+//     int file_index = root_directory_map.find(this->root->file_name);
+//     fseek(partition, 513 + (sizeof(root) * file_index), SEEK_SET);
+//     fwrite();
+// }
 void root_read::print_data_type()
 {
     cout << "Data type: " << this->root->data_type << endl;
@@ -113,8 +158,8 @@ int root_read::search_data(FILE *partition, string name)
     int archive = 0;
     while (1)
     {
-        fseek(partition, 513 + (sizeof(root_read) * archive), SEEK_SET);
-        fread(this, sizeof(root_read), 1, partition);
+        fseek(partition, 513 + (sizeof(root) * archive), SEEK_SET);
+        fread(this, sizeof(root), 1, partition);
         if (this->root->file_name == name)
         {
             return archive;

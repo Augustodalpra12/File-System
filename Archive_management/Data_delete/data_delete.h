@@ -19,7 +19,7 @@ class data_delete : public root_read
 private:
     NODE file_clusters;
     boot_record boot;
-
+    root_directory root;
     void get_file_clusters(FILE *partition);
     void print_file_clusters(FILE *partition);
     void choose_file_delete(FILE *partition);

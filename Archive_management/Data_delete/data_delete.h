@@ -1,7 +1,7 @@
 #ifndef DATA_DELETE_H
 #define DATA_DELETE_H
 
-#include "../Data_reading/root_directory.h"
+#include "../Data_reading/root_read.h"
 #include "../Boot_reading/boot.h"
 #include <iostream>
 #include <string>
@@ -14,7 +14,7 @@ struct NODE
     NODE *next;
 };
 
-class data_delete : public root_directory
+class data_delete : public root_read
 {
 private:
     NODE file_clusters;

@@ -5,10 +5,9 @@
 #include <climits>
 
 using namespace std;
-map<int, string> root_directory_map;
-class root_directory
+
+struct root_directory
 {
-private:
     char data_type;
     short time_created;
     short date_created;
@@ -19,10 +18,17 @@ private:
     int file_size;
     char file_name[13];
 
+} __attribute__((packed));
+class root_read
+{
+private:
+    root_directory *root;
+    map<int, string> root_directory_map;
+
 public:
-    root_directory(/* args */);
-    ~root_directory();
-    root_directory(FILE *file);
+    root_read(/* args */);
+    ~root_read();
+    root_read(FILE *file);
 
     void read_data(FILE *file, int archive);
     void print_data_type();
@@ -49,5 +55,4 @@ public:
     int search_data(FILE *file, string name);
     void read_archive(FILE *file);
     void read_all_files(FILE *file);
-
-} __attribute__((packed));
+};

@@ -1,14 +1,14 @@
-#include "root_directory.h"
+#include "root_read.h"
 
-root_directory::root_directory(/* args */)
+root_read::root_read(/* args */)
 {
 }
 
-root_directory::~root_directory()
+root_read::~root_read()
 {
 }
 
-root_directory::root_directory(FILE *partition)
+root_read::root_read(FILE *partition)
 {
     string filename;
     read_all_files(partition);
@@ -18,104 +18,104 @@ root_directory::root_directory(FILE *partition)
     read_data(partition, archive);
 }
 
-void root_directory::print_data_type()
+void root_read::print_data_type()
 {
-    cout << "Data type: " << this->data_type << endl;
+    cout << "Data type: " << this->root->data_type << endl;
 }
 
-void root_directory::print_time_created()
+void root_read::print_time_created()
 {
-    cout << "Time created: " << this->time_created << endl;
+    cout << "Time created: " << this->root->time_created << endl;
 }
 
-void root_directory::print_date_created()
+void root_read::print_date_created()
 {
-    cout << "Date created: " << this->date_created << endl;
+    cout << "Date created: " << this->root->date_created << endl;
 }
 
-void root_directory::print_last_access()
+void root_read::print_last_access()
 {
-    cout << "Last access: " << this->last_access << endl;
+    cout << "Last access: " << this->root->last_access << endl;
 }
 
-void root_directory::print_time_modified()
+void root_read::print_time_modified()
 {
-    cout << "Time modified: " << this->time_modified << endl;
+    cout << "Time modified: " << this->root->time_modified << endl;
 }
 
-void root_directory::print_date_modified()
+void root_read::print_date_modified()
 {
-    cout << "Date modified: " << this->date_modified << endl;
+    cout << "Date modified: " << this->root->date_modified << endl;
 }
 
-void root_directory::print_first_cluster()
+void root_read::print_first_cluster()
 {
-    cout << "First cluster: " << this->first_cluster << endl;
+    cout << "First cluster: " << this->root->first_cluster << endl;
 }
 
-void root_directory::print_file_size()
+void root_read::print_file_size()
 {
-    cout << "File size: " << this->file_size << endl;
+    cout << "File size: " << this->root->file_size << endl;
 }
 
-void root_directory::print_file_name()
+void root_read::print_file_name()
 {
-    cout << "File name: " << this->file_name << endl;
+    cout << "File name: " << this->root->file_name << endl;
 }
 
-int root_directory::get_data_type()
+int root_read::get_data_type()
 {
-    return static_cast<int>(this->data_type);
+    return static_cast<int>(this->root->data_type);
 }
 
-int root_directory::get_time_created()
+int root_read::get_time_created()
 {
-    return static_cast<int>(this->time_created);
+    return static_cast<int>(this->root->time_created);
 }
 
-int root_directory::get_date_created()
+int root_read::get_date_created()
 {
-    return static_cast<int>(this->date_created);
+    return static_cast<int>(this->root->date_created);
 }
 
-int root_directory::get_last_access()
+int root_read::get_last_access()
 {
-    return static_cast<int>(this->last_access);
+    return static_cast<int>(this->root->last_access);
 }
 
-int root_directory::get_time_modified()
+int root_read::get_time_modified()
 {
-    return static_cast<int>(this->time_modified);
+    return static_cast<int>(this->root->time_modified);
 }
 
-int root_directory::get_date_modified()
+int root_read::get_date_modified()
 {
-    return static_cast<int>(this->date_modified);
+    return static_cast<int>(this->root->date_modified);
 }
 
-int root_directory::get_first_cluster()
+int root_read::get_first_cluster()
 {
-    return static_cast<int>(this->first_cluster);
+    return static_cast<int>(this->root->first_cluster);
 }
 
-int root_directory::get_file_size()
+int root_read::get_file_size()
 {
-    return static_cast<int>(this->file_size);
+    return static_cast<int>(this->root->file_size);
 }
 
-string root_directory::get_file_name()
+string root_read::get_file_name()
 {
-    return this->file_name;
+    return this->root->file_name;
 }
 
-int root_directory::search_data(FILE *partition, string name)
+int root_read::search_data(FILE *partition, string name)
 {
     int archive = 0;
     while (1)
     {
-        fseek(partition, 513 + (sizeof(root_directory) * archive), SEEK_SET);
-        fread(this, sizeof(root_directory), 1, partition);
-        if (this->file_name == name)
+        fseek(partition, 513 + (sizeof(root_read) * archive), SEEK_SET);
+        fread(this, sizeof(root_read), 1, partition);
+        if (this->root->file_name == name)
         {
             return archive;
         }
@@ -123,7 +123,7 @@ int root_directory::search_data(FILE *partition, string name)
     }
 }
 
-void root_directory::read_all_files(FILE *partition)
+void root_read::read_all_files(FILE *partition)
 {
     boot_record boot;
     boot.read_boot_record(partition);
@@ -135,13 +135,13 @@ void root_directory::read_all_files(FILE *partition)
     while (root_directories_entries >= 0)
     {
         fseek(partition, 513 + (sizeof(root_directory) * currentEntryIndex), SEEK_SET);
-        fread(this, sizeof(root_directory), 1, partition);
+        fread(&this->root, sizeof(root_directory), 1, partition);
 
-        if (this->data_type == '0xFF')
+        if (this->root->data_type == '-1')
         {
             string fileName = this->get_file_name();
 
-            root_directory_map[currentEntryIndex] = fileName;
+            this->root_directory_map[currentEntryIndex] = fileName;
         }
 
         currentEntryIndex++;
@@ -156,7 +156,7 @@ void root_directory::read_all_files(FILE *partition)
         cout << "Index: " << index << ", File Name: " << fileName << endl;
     }
 }
-void root_directory::print_archive_info()
+void root_read::print_archive_info()
 {
     cout << "----------------------------------------------------------" << endl;
     print_data_type();
@@ -169,13 +169,13 @@ void root_directory::print_archive_info()
     print_file_size();
     print_file_name();
 }
-void root_directory::read_data(FILE *partition, int archive)
+void root_read::read_data(FILE *partition, int archive)
 {
-    fseek(partition, 513 + (sizeof(root_directory) * archive), SEEK_SET);
-    fread(this, sizeof(root_directory), 1, partition);
+    fseek(partition, 513 + (sizeof(root) * archive), SEEK_SET);
+    fread(this->root, sizeof(root), 1, partition);
 }
 
-void root_directory::read_archive(FILE *partition)
+void root_read::read_archive(FILE *partition)
 {
     boot_record boot;
     int cluster_size = boot.get_sectors_per_cluster() * boot.get_bytes_per_sector();

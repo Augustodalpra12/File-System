@@ -5,6 +5,7 @@
 #include <cmath>
 #include <ctime>
 #include "../Boot_reading/boot.h"
+#include "./file_name.h"
 using namespace std;
 
 struct NODE
@@ -25,6 +26,7 @@ private:
     FILE* partition;
     FILE* file_to_copy;
     string file_name;
+    File_name name_to_root;
     int file_size;
     int bitmap_start;
     NODE file_clusters;
@@ -33,6 +35,8 @@ private:
     // -- Methods (order of use) -- 
     int get_file();
     void get_filename();
+    File_name file_name_fromextension(string fullname);
+    int is_name_valid(File_name file_name);
 
     void get_file_size();
 

@@ -40,10 +40,13 @@ int data_write::get_file()
         return 0;
     }
 
-    while (file_name.size() > 10)
+    name_to_root.set_name(file_name);    
+
+    while (!name_to_root.is_name_valid())
     {
         cout << "Enter a new name for the file ";
         cin >> this->file_name;
+        name_to_root.set_name(file_name);    
     }
     
     return 1;
@@ -257,7 +260,14 @@ void data_write::set_file_size()
 
 void data_write::set_filename()
 {
-    fwrite(this->file_name.c_str(), sizeof(char), this->file_name.size(), this->partition);
+    string name = string(this->name_to_root.get_name());
+    cout << name << endl;
+    fwrite(name.c_str(), name.size(), 1, this->partition);
+    
+    fseek(this->partition, (10 - name.size()), SEEK_CUR);
+    string extension = this->name_to_root.get_extension();
+    cout << extension << endl;
+    fwrite(extension.c_str(), extension.size(), 1, this->partition);
 }
 
 void data_write::add_cluster(int cluster_number)

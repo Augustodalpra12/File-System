@@ -34,10 +34,12 @@ int data_write::get_file()
 {
     get_filename();
     file_to_copy = fopen(file_name.c_str(), "r");
-    if (file_to_copy == NULL)
+    while (file_to_copy == NULL)
     {
         cerr << "File not found" << endl;
-        return 0;
+        
+        get_filename();
+        file_to_copy = fopen(file_name.c_str(), "r");
     }
 
     name_to_root.set_name(file_name);    
@@ -161,7 +163,7 @@ void data_write::write_file()
 
         NODE* next = cluster->next;
 
-        fseek(this->partition, cluster_in_bytes+508, SEEK_SET);
+        fseek(this->partition, cluster_in_bytes + cluster_size, SEEK_SET);
         fwrite(&next->cluster_number, sizeof(int), 1, this->partition);
 
         cluster = cluster->next;
@@ -179,7 +181,7 @@ int data_write::write_on_root()
         return 0;
     }
 
-    set_data_type(19);
+    set_data_type(0x12);
 
     tm* today = get_now();
 

@@ -137,7 +137,7 @@ void root_read::read_all_files(FILE *partition)
         fseek(partition, 513 + (sizeof(root_directory) * currentEntryIndex), SEEK_SET);
         fread(&this->root, sizeof(root_directory), 1, partition);
 
-        if (this->root->data_type == '-1')
+        if (this->root->data_type == -1)
         {
             string fileName = this->get_file_name();
 

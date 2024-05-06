@@ -120,7 +120,7 @@ void data_delete::delete_metadata(FILE *partition, int archiveIndex)
 {
     int root_start = (boot.get_sectors_per_cluster() * boot.get_bytes_per_sector());
     int file_position = root_start + (archiveIndex * 32);
-    set_data_type(UINT_MAX, partition);
+    set_data_type(-1, partition);
 }
 
 void data_delete::set_data_type(char data_type, FILE *partition)

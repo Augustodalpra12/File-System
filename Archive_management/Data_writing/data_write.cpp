@@ -161,7 +161,7 @@ void data_write::write_file()
 
         NODE* next = cluster->next;
 
-        fseek(this->partition, cluster_in_bytes+508, SEEK_SET);
+        fseek(this->partition, cluster_in_bytes + cluster_size, SEEK_SET);
         fwrite(&next->cluster_number, sizeof(int), 1, this->partition);
 
         cluster = cluster->next;

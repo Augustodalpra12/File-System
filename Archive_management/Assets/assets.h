@@ -18,6 +18,9 @@ struct Date_Hour
     short time;
 };
 
+short pack_date(int year, int month, int day);
+short pack_time(int hour, int minute, int second);
+
 class File_name
 {
 private:

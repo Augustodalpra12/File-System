@@ -68,6 +68,11 @@ void root_read::print_data_type()
     cout << "Data type: " << this->root->data_type << endl;
 }
 
+root_directory root_read::get_root()
+{
+    return *this->root;
+}
+
 void root_read::print_time_created()
 {
     cout << "Time created: " << this->root->time_created << endl;

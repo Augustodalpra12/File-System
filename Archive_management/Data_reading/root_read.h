@@ -52,6 +52,7 @@ public:
     short pack_date(int year, int month, int day);
     short pack_time(int hour, int minute, int second);
     void set_last_access(Date_Hour today);
+    root_directory get_root();
 
     int get_data_type();
     int get_time_created();

@@ -38,6 +38,7 @@ private:
     int set_bitmap();
     int write_occupied_bytes(int reserved_clusters);
     int write_remaining_bits(int leftover_clusters);
+    char final_bitmap_bits(int remaining_bits);
 
     int get_root_dir_in_sectors();
 public:

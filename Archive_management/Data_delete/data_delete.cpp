@@ -16,15 +16,16 @@ data_delete::~data_delete()
 
 void data_delete ::delete_file(FILE *partition)
 {
+
     read_all_files(partition);
     cout << "Choose file to be deleted: ";
     // usuario vai escolher o int que vai ser deletado
     int archiveIndex;
     cin >> archiveIndex;
     cout << endl;
-    root_directory root = this->get_root();
-    fseek(partition, 513 + (sizeof(root) * archiveIndex), SEEK_SET);
-    fread(&root, sizeof(root), 1, partition);
+    cout << "boot record: " << this->boot.get_bytes_per_sector() << endl;
+    fseek(partition, boot.get_bytes_per_sector() + (sizeof(root_directory) * archiveIndex), SEEK_SET);
+    read_data(partition);
     // duvida vai pegar o root do delete ou do read?
     get_file_clusters(partition);
     free_bitmap(partition);
@@ -36,17 +37,47 @@ void data_delete ::get_file_clusters(FILE *partition)
 {
     int cluster_size = this->boot.get_sectors_per_cluster() * this->boot.get_bytes_per_sector();
     int first_cluster = this->get_first_cluster();
+    cout << "first cluster: " << first_cluster << endl;
     this->file_clusters.cluster_number = first_cluster;
     this->file_clusters.next = NULL;
-    fseek(partition, (((this->boot.get_root_entry_count() * 32) + 512) + (this->boot.get_bitmap_in_clusters() * cluster_size) + (first_cluster * (cluster_size))) + 28, SEEK_SET);
-    int pointer;
-    while (pointer != UINT_MAX)
+
+    int root_in_sectors = ceil((this->boot.get_root_entry_count() * 32.0) / this->boot.get_bytes_per_sector());
+    int end_reserved_clusters_quantity = ceil((root_in_sectors + 1.0) / this->boot.get_sectors_per_cluster());
+    int reserved_clusters_in_bytes = end_reserved_clusters_quantity * cluster_size;
+
+    int bitmap_size_bytes = this->boot.get_bitmap_in_clusters() * cluster_size;
+
+    int first_cluster_in_bytes = first_cluster * cluster_size;
+    cout << "first_cluster_in_bytes: " << first_cluster_in_bytes << endl;
+    int pointer_to_next_cluster = cluster_size - 4;
+
+    int first_pointer_position_bytes = first_cluster_in_bytes + pointer_to_next_cluster;
+
+    fseek(partition, first_pointer_position_bytes, SEEK_SET);
+    cout << "pointer_position_bytes1: " << first_pointer_position_bytes << endl;
+    int pointer = -1;
+    fread(&pointer, sizeof(int), 1, partition);
+    // cout << "pointer: " << pointer << endl;
+    NODE *aux = &file_clusters;
+
+    while (pointer != 0)
     {
+        cout << "pointer: " << pointer << endl;
+
+        NODE *nextNode = new NODE;
+        nextNode->next = NULL;
+        nextNode->cluster_number = pointer;
+        cout << "nextNODE: " << nextNode->cluster_number << endl;
+        cout << "Current NODE: " << aux->cluster_number << endl;
+        aux->next = nextNode;
+        aux = nextNode;
+
+        int next_cluster_in_bytes = pointer * cluster_size + pointer_to_next_cluster;
+        // int pointer_position_bytes = reserved_clusters_in_bytes + bitmap_size_bytes + next_cluster_in_bytes + pointer_to_next_cluster;
+        // cout << "pointer_position_bytes2: " << pointer_position_bytes << endl;
+        fseek(partition, next_cluster_in_bytes, SEEK_SET);
         fread(&pointer, sizeof(int), 1, partition);
-        this->file_clusters.next = new NODE;
-        this->file_clusters.next->cluster_number = pointer;
-        this->file_clusters.next->next = NULL;
-        fseek(partition, ((this->boot.get_root_entry_count() * 32) + 512) + (this->boot.get_bitmap_in_clusters() * cluster_size) + (pointer * (cluster_size)), SEEK_SET);
+        cout << "pointer: " << pointer << endl;
     }
 }
 
@@ -65,7 +96,7 @@ void data_delete::flip_bit(int mode, int position, FILE *partition)
     char bit;
     int root_in_sectors = ceil((this->boot.get_root_entry_count() * 32.0) / this->boot.get_bytes_per_sector());
     int root_and_boot_clusters = ceil((root_in_sectors + 1.0) / this->boot.get_sectors_per_cluster());
-
+    cout << "position: " << position << endl;
     int bitmap_start = this->boot.get_bytes_per_sector() * root_and_boot_clusters;
     switch (position % 8)
     {
@@ -122,8 +153,9 @@ void data_delete::flip_bit(int mode, int position, FILE *partition)
 
 void data_delete::delete_metadata(FILE *partition, int archiveIndex)
 {
-    int root_start = (boot.get_sectors_per_cluster() * boot.get_bytes_per_sector());
+    int root_start = boot.get_bytes_per_sector();
     int file_position = root_start + (archiveIndex * 32);
+    fseek(partition, file_position, SEEK_SET);
     set_data_type(-1, partition);
 }
 

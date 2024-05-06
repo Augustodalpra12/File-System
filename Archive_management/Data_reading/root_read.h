@@ -7,11 +7,11 @@
 
 using namespace std;
 
-struct Date_Hour
-{
-    short date;
-    short time;
-};
+// struct Date_Hour
+// {
+//     short date;
+//     short time;
+// };
 
 struct root_directory
 {
@@ -29,15 +29,15 @@ struct root_directory
 class root_read
 {
 private:
-    root_directory *root;
     map<int, string> root_directory_map;
+    root_directory root;
 
 public:
     root_read(/* args */);
     ~root_read();
     root_read(FILE *file);
 
-    void read_data(FILE *file, int archive);
+    void read_data(FILE *file);
     void print_data_type();
     void print_time_created();
     void print_date_created();
@@ -48,12 +48,11 @@ public:
     void print_file_size();
     void print_file_name();
     void print_archive_info();
-    void update_last_access(FILE *partition);
-    short pack_date(int year, int month, int day);
-    short pack_time(int hour, int minute, int second);
-    void set_last_access(Date_Hour today);
+    // void update_last_access(FILE *partition);
+    // short pack_date(int year, int month, int day);
+    // short pack_time(int hour, int minute, int second);
+    // void set_last_access(Date_Hour today);
     root_directory get_root();
-
     int get_data_type();
     int get_time_created();
     int get_date_created();
@@ -63,8 +62,7 @@ public:
     int get_first_cluster();
     int get_file_size();
     string get_file_name();
-    tm *get_now();
-
+    // tm *get_now();
     int search_data(FILE *file, string name);
     void read_archive(FILE *file);
     void read_all_files(FILE *file);

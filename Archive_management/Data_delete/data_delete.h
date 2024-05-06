@@ -3,16 +3,17 @@
 
 #include "../Data_reading/root_read.h"
 #include "../Boot_reading/boot.h"
+#include "../Data_writing/data_write.h"
 #include <iostream>
 #include <string>
 #include <map>
 #include <cmath>
 
-struct NODE
-{
-    int cluster_number;
-    NODE *next;
-};
+// struct NODE
+// {
+//     int cluster_number;
+//     NODE *next;
+// };
 
 class data_delete : public root_read
 {

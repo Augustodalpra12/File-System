@@ -157,6 +157,9 @@ void data_delete::delete_metadata(FILE *partition, int archiveIndex)
     int file_position = root_start + (archiveIndex * 32);
     fseek(partition, file_position, SEEK_SET);
     set_data_type(-1, partition);
+    fseek(partition, +18, SEEK_SET);
+    char no_name = 0;
+    fwrite(&no_name, sizeof(char), 13, partition);
 }
 
 void data_delete::set_data_type(char data_type, FILE *partition)

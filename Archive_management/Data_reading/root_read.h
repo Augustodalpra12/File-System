@@ -63,7 +63,7 @@ public:
     int get_file_size();
     string get_file_name();
     // tm *get_now();
-    int search_data(FILE *file, string name);
+    void search_data(FILE *file, int index);
     void read_archive(FILE *file);
     void read_all_files(FILE *file);
 };

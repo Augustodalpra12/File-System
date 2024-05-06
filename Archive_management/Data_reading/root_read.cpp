@@ -13,14 +13,13 @@ root_read::root_read(FILE *partition)
     boot_record boot;
     boot.read_boot_record(partition);
 
-    string filename;
+    int index;
     read_all_files(partition);
-    cout << "Enter file name: " << endl;
-    cin >> filename;
-    int archive = search_data(partition, filename);
-    fseek(partition, boot.get_bytes_per_sector() + (sizeof(root) * archive), SEEK_SET);
-
+    cout << "Enter File Index to read: " << endl;
+    cin >> index;
+    search_data(partition, index);
     read_data(partition);
+    read_archive(partition);
 }
 
 // tm *root_read::get_now()
@@ -163,19 +162,13 @@ string root_read::get_file_name()
     return this->root.file_name;
 }
 
-int root_read::search_data(FILE *partition, string name)
+void root_read::search_data(FILE *partition, int index)
 {
+    boot_record boot;
+    boot.read_boot_record(partition);
     int archive = 0;
-    while (1)
-    {
-        fseek(partition, 513 + (sizeof(root) * archive), SEEK_SET);
-        fread(this, sizeof(root), 1, partition);
-        if (this->root.file_name == name)
-        {
-            return archive;
-        }
-        archive++;
-    }
+
+    fseek(partition, boot.get_bytes_per_sector() + (32 * index), SEEK_SET);
 }
 void root_read::read_all_files(FILE *partition)
 {
@@ -237,25 +230,46 @@ void root_read::read_data(FILE *partition)
 void root_read::read_archive(FILE *partition)
 {
     boot_record boot;
+    boot.read_boot_record(partition);
     int cluster_size = boot.get_sectors_per_cluster() * boot.get_bytes_per_sector();
     int first_cluster = this->get_first_cluster();
-    fseek(partition, ((boot.get_root_entry_count() * 32) + 512) + (boot.get_bitmap_in_clusters() * cluster_size) + (first_cluster * (cluster_size)), SEEK_SET);
+
     char data[cluster_size - 4];
-    int pointer;
+    int pointer = first_cluster;
     cout << " ---------------- DADOS ------------------" << endl;
-    while (1)
+    int bytes_read = 0;
+    while (bytes_read < this->get_file_size())
     {
-        fread(data, sizeof(cluster_size - 4), 1, partition);
+        fseek(partition, (pointer * cluster_size), SEEK_SET);
+        fread(&data, cluster_size - 4, 1, partition);
+        bytes_read += cluster_size - 4;
+        int write_size = cluster_size - 4;
+
+        if (bytes_read > this->get_file_size())
+            write_size -= (bytes_read - this->get_file_size());
+        cout << endl
+             << "write size" << write_size << endl;
+
         fread(&pointer, sizeof(4), 1, partition);
-        for (int i = 0; i < this->get_file_size(); i++)
+        for (int i = 0; i < write_size; i++)
         {
-            cout << data[i];
+            printf("%c", data[i]);
         }
-        if (pointer == UINT_MAX)
-        {
-            break;
-        }
-        fseek(partition, ((boot.get_root_entry_count() * 32) + 512) + (boot.get_bitmap_in_clusters() * cluster_size) + (pointer * (cluster_size)), SEEK_SET);
     }
+    cout << endl;
+    // while (1)
+    // {
+    //     fread(&data, cluster_size - 4, 1, partition);
+    //     fread(&pointer, sizeof(4), 1, partition);
+    //     for (int i = 0; i < this->get_file_size(); i++)
+    //     {
+    //         cout << data[i];
+    //     }
+    //     if (pointer == 0)
+    //     {
+    //         break;
+    //     }
+    //     fseek(partition, (pointer * (cluster_size)), SEEK_SET);
+    // }
     cout << " ------------------------------------------------" << endl;
 }

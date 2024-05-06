@@ -1,6 +1,6 @@
 #include "data_write.h"
 
-data_write::data_write(boot_record boot, FILE* file)
+data_write::data_write(boot_record boot, FILE *file)
 {
     this->partition = file;
     this->boot = boot;
@@ -14,20 +14,17 @@ data_write::data_write(boot_record boot, FILE* file)
 
     if (!check_available_clusters())
         return;
-    
+
     set_occupied_bits();
     add_cluster(0); // Adding a final cluster pointing to 0, for us it means to nothing
     write_file();
 
     if (!write_on_root())
         return;
-    
-
 }
 
 data_write::~data_write()
 {
-
 }
 
 int data_write::get_file()
@@ -40,15 +37,15 @@ int data_write::get_file()
         return 0;
     }
 
-    name_to_root.set_name(file_name);    
+    name_to_root.set_name(file_name);
 
     while (!name_to_root.is_name_valid())
     {
         cout << "Enter a new name for the file ";
         cin >> this->file_name;
-        name_to_root.set_name(file_name);    
+        name_to_root.set_name(file_name);
     }
-    
+
     return 1;
 }
 
@@ -67,11 +64,11 @@ void data_write::get_file_size()
 
 int data_write::check_available_clusters()
 {
-    int clusters_needed = ceil(this->file_size/((this->boot.get_bytes_per_sector()*this->boot.get_sectors_per_cluster()) - 4.0)); // Tamanho de cada cluster -4 bytes para endereçamento do próximo cluster
+    int clusters_needed = ceil(this->file_size / ((this->boot.get_bytes_per_sector() * this->boot.get_sectors_per_cluster()) - 4.0)); // Tamanho de cada cluster -4 bytes para endereçamento do próximo cluster
 
     int root_in_sectors = ceil((this->boot.get_root_entry_count() * 32.0) / this->boot.get_bytes_per_sector());
-    int root_and_boot_clusters = ceil((root_in_sectors + 1.0)/this->boot.get_sectors_per_cluster());
-    
+    int root_and_boot_clusters = ceil((root_in_sectors + 1.0) / this->boot.get_sectors_per_cluster());
+
     bitmap_start = boot.get_bytes_per_sector() * root_and_boot_clusters;
 
     fseek(this->partition, bitmap_start, SEEK_SET);
@@ -84,7 +81,7 @@ int data_write::check_available_clusters()
     {
         fread(&byte, sizeof(byte), 1, this->partition);
         if (byte != -1)
-            clusters_found += count_free_bits(i, byte, clusters_needed-clusters_found);
+            clusters_found += count_free_bits(i, byte, clusters_needed - clusters_found);
 
         i++;
     } while (clusters_found < clusters_needed && i < bitmap_size);
@@ -100,7 +97,7 @@ int data_write::check_available_clusters()
 
 int data_write::count_free_bits(int index, char byte, int spaces_needed)
 {
-    int count = 0; 
+    int count = 0;
 
     bool bit[8];
     bit[7] = byte & 0b00000001;
@@ -113,23 +110,23 @@ int data_write::count_free_bits(int index, char byte, int spaces_needed)
     bit[0] = byte & 0b10000000;
 
     for (int i = 0; i < 8; i++)
-    {                    
+    {
         if (!bit[i])
         {
             count++;
-            add_cluster((index*8) + i);
+            add_cluster((index * 8) + i);
         }
 
         if (count == spaces_needed)
             break;
     }
-    
+
     return count;
 }
 
 int data_write::set_occupied_bits()
 {
-    NODE* cluster = &this->file_clusters;
+    NODE *cluster = &this->file_clusters;
     while (cluster != NULL)
     {
         flip_bit(1, cluster->cluster_number);
@@ -144,7 +141,7 @@ void data_write::write_file()
     char full_file[cluster_size];
 
     int bytes_read = 0;
-    NODE* cluster = &this->file_clusters;
+    NODE *cluster = &this->file_clusters;
 
     while (bytes_read < this->file_size)
     {
@@ -155,13 +152,15 @@ void data_write::write_file()
         if (bytes_read > this->file_size)
             write_size -= (bytes_read - this->file_size);
 
+        cout << "write size" << write_size << endl;
+
         int cluster_in_bytes = cluster->cluster_number * (cluster_size + 4);
         fseek(this->partition, cluster_in_bytes, SEEK_SET);
         fwrite(&full_file, write_size, 1, this->partition);
 
-        NODE* next = cluster->next;
+        NODE *next = cluster->next;
 
-        fseek(this->partition, cluster_in_bytes+508, SEEK_SET);
+        fseek(this->partition, cluster_in_bytes + 508, SEEK_SET);
         fwrite(&next->cluster_number, sizeof(int), 1, this->partition);
 
         cluster = cluster->next;
@@ -173,7 +172,7 @@ int data_write::write_on_root()
     int root_start = (boot.get_sectors_per_cluster() * boot.get_bytes_per_sector());
     fseek(this->partition, root_start, SEEK_SET);
 
-    if(!search_root_space())
+    if (!search_root_space())
     {
         cerr << "No space available on root" << endl;
         return 0;
@@ -181,7 +180,7 @@ int data_write::write_on_root()
 
     set_data_type(19);
 
-    tm* today = get_now();
+    tm *today = get_now();
 
     Date_Hour today_packed;
 
@@ -206,7 +205,7 @@ int data_write::search_root_space()
     for (int i = 0; i < root_entries; i++)
     {
         fread(&type, sizeof(char), 1, this->partition);
-        if(type == -1)
+        if (type == -1)
         {
             fseek(this->partition, -1, SEEK_CUR);
             return 1;
@@ -222,10 +221,10 @@ void data_write::set_data_type(char data_type)
     fwrite(&data_type, sizeof(char), 1, this->partition);
 }
 
-tm* data_write::get_now()
+tm *data_write::get_now()
 {
     time_t now = time(nullptr);
-    tm* today = localtime(&now);
+    tm *today = localtime(&now);
 
     return today;
 }
@@ -263,7 +262,7 @@ void data_write::set_filename()
     string name = string(this->name_to_root.get_name());
     cout << name << endl;
     fwrite(name.c_str(), name.size(), 1, this->partition);
-    
+
     fseek(this->partition, (10 - name.size()), SEEK_CUR);
     string extension = this->name_to_root.get_extension();
     cout << extension << endl;
@@ -274,12 +273,12 @@ void data_write::add_cluster(int cluster_number)
 {
     if (this->file_clusters.cluster_number == -1)
     {
-        this->file_clusters.cluster_number = cluster_number;    
+        this->file_clusters.cluster_number = cluster_number;
         return;
     }
 
-    NODE* aux = new NODE;
-    NODE* end;
+    NODE *aux = new NODE;
+    NODE *end;
     aux->cluster_number = cluster_number;
     aux->next = NULL;
 
@@ -328,13 +327,13 @@ int data_write::flip_bit(int mode, int position)
     case 7:
         bit = 1;
         break;
-    
+
     default:
         break;
     }
 
     fseek(this->partition, bitmap_start, SEEK_SET);
-    fseek(this->partition, (position/8), SEEK_CUR);
+    fseek(this->partition, (position / 8), SEEK_CUR);
 
     char byte;
 
@@ -354,7 +353,7 @@ int data_write::flip_bit(int mode, int position)
 short data_write::pack_date(int year, int month, int day)
 {
     short packed_date = 0;
-    packed_date |= ((year - 2000) & 0x7F) << 9; // Representa 
+    packed_date |= ((year - 2000) & 0x7F) << 9; // Representa
     packed_date |= (month & 0xF) << 5;
     packed_date |= (day & 0x1F);
 

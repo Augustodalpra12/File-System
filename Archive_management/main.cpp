@@ -1,7 +1,6 @@
 #include "./Boot_reading/boot.h"
 #include "./Data_writing/data_write.h"
 #include "./Data_delete/data_delete.h"
-// #include "./Data_reading/data_read.h"
 // g++ main.cpp .\Boot_reading\boot.cpp .\Data_reading\root_read.cpp .\Data_writing\data_write.cpp .\Data_writing\file_name.cpp .\Data_delete\data_delete.cpp -o main
 
 int main(int argc, char const *argv[])
@@ -34,7 +33,7 @@ int main(int argc, char const *argv[])
     boot.print_bitmap_in_clusters();
 
     data_write data(boot, partition);
-
+    root_read root(partition);
     data_delete data_deletar(partition, boot);
     data_deletar.delete_file(partition);
 

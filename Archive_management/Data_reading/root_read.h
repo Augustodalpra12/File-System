@@ -65,7 +65,7 @@ public:
     int get_first_cluster();
     int get_file_size();
     string get_file_name();
-    void check_map_size();
+    int check_map_size();
 
     tm *get_now();
 

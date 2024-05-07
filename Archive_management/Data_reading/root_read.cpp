@@ -15,7 +15,11 @@ root_read::root_read(FILE *partition)
 
     int index;
     read_all_files(partition);
-    check_map_size();
+    if (check_map_size())
+    {
+        return;
+    }
+
     cout << "READING..." << endl;
     index = get_valid_index();
     search_data(partition, index);
@@ -24,13 +28,14 @@ root_read::root_read(FILE *partition)
     read_archive(partition);
 }
 
-void root_read::check_map_size()
+int root_read::check_map_size()
 {
     if (this->root_directory_map.size() == 0)
     {
         cout << "No files in the root directory" << endl;
-        return;
+        return 1;
     }
+    return 0;
 }
 int root_read::is_index_valid(int index)
 {

@@ -31,10 +31,12 @@ int data_write::get_file()
 {
     get_filename();
     file_to_copy = fopen(file_name.c_str(), "r");
-    if (file_to_copy == NULL)
+    while (file_to_copy == NULL)
     {
         cerr << "File not found" << endl;
-        return 0;
+        
+        get_filename();
+        file_to_copy = fopen(file_name.c_str(), "r");
     }
 
     name_to_root.set_name(file_name);
@@ -160,7 +162,7 @@ void data_write::write_file()
 
         NODE *next = cluster->next;
 
-        fseek(this->partition, cluster_in_bytes + 508, SEEK_SET);
+        fseek(this->partition, cluster_in_bytes + cluster_size, SEEK_SET);
         fwrite(&next->cluster_number, sizeof(int), 1, this->partition);
 
         cluster = cluster->next;
@@ -178,14 +180,16 @@ int data_write::write_on_root()
         return 0;
     }
 
-    set_data_type(19);
+    set_data_type(0x12);
 
     tm *today = get_now();
 
     Date_Hour today_packed;
 
-    today_packed.date = pack_date(today->tm_year + 1900, today->tm_mon + 1, today->tm_mday);
-    today_packed.time = pack_time(today->tm_hour, today->tm_min, today->tm_sec);
+    pack packer(today->tm_year + 1900, today->tm_mon + 1, today->tm_mday, today->tm_hour, today->tm_min, today->tm_sec);
+
+    today_packed.date = packer.pack_date();
+    today_packed.time = packer.pack_time();
 
     set_creation(today_packed);
     set_last_access(today_packed);
@@ -348,29 +352,6 @@ int data_write::flip_bit(int mode, int position)
     fwrite(&byte, sizeof(byte), 1, this->partition);
 
     return 1;
-}
-
-short data_write::pack_date(int year, int month, int day)
-{
-    short packed_date = 0;
-    packed_date |= ((year - 2000) & 0x7F) << 9; // Representa
-    packed_date |= (month & 0xF) << 5;
-    packed_date |= (day & 0x1F);
-
-    return packed_date;
-}
-
-short data_write::pack_time(int hour, int minute, int second)
-{
-    short packed_hour = 0;
-    packed_hour |= (hour & 0x1F) << 11;
-    packed_hour |= (minute & 0x3F) << 5;
-
-    int sec = second / 2;
-
-    packed_hour |= (sec & 0x1F);
-
-    return packed_hour;
 }
 
 int data_write::bitmap_position_to_cluster(int bit)

@@ -124,15 +124,30 @@ int formater::set_bitmap()
         write_remaining_bits(leftover_bits);
     }
 
-    int total_cluster_quantity = ceil(floor(partition_size_in_bytes/(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster)))/8);
+    int usable_clusters = partition_size_in_bytes/(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster));
 
+    int total_cluster_quantity = usable_clusters/8;
     partition.seekp(bitmap_start, ios::beg); // Vai pro começo do bitmap
     partition.seekp((total_cluster_quantity), ios::cur); // Vai pro final da parte útil do bitmap
 
-    char one = 255;
-    int size = (boot.bitmap_size_in_clusters*(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster))) - total_cluster_quantity; // Pega o tamanho do bitmap e ve o espaço que ta sobrando no cluster
+
+    int invalid_spaces = (boot.bitmap_size_in_clusters*(boot.bytes_per_sector * static_cast<int>(boot.sectors_per_cluster))) - total_cluster_quantity; 
+
+    int bitmap_final_byte = usable_clusters%8;
+
+
+    if (bitmap_final_byte)
+    {
+        char one = final_bitmap_bits(bitmap_final_byte);
+        partition.write(&one, 1);
+        invalid_spaces--;
+    }
+
+    // Pega o tamanho do bitmap e ve o espaço que ta sobrando no cluster
     // NÃO TA FAZENDO CERTO ISSO, TA CORTANDO UM BYTE NO FINAL, PERCA DE 1 A 8 CLUSTERS
-    for (int i = 0; i < size; i++)
+    
+    char one = -1;
+    for (int i = 0; i < invalid_spaces; i++)
     {
         partition.write(&one, 1);
     }
@@ -159,6 +174,14 @@ int formater::write_remaining_bits(int leftover_clusters)
 
     partition.write(&bits_to_write, 1);
     return 0;
+}
+
+char formater::final_bitmap_bits(int remaining_bits)
+{
+    char mask = (~0 << (8 - remaining_bits));
+    char bits_to_write = 255 & mask;
+
+    return (~bits_to_write);
 }
 
 void formater::set_filename(string filename)

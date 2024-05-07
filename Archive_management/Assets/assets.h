@@ -1,9 +1,38 @@
-#ifndef FILE_NAME_H
-#define FILE_NAME_H
+#ifndef ASSETS
+#define ASSETS
+
 #include <iostream>
-#include <string>
+#include <cstring>
 
 using namespace std;
+
+struct NODE
+{
+    int cluster_number;
+    NODE* next;
+};
+
+struct Date_Hour
+{
+    short date;
+    short time;
+};
+
+class pack
+{
+private:
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+    int second;
+public:
+    pack(int year, int month, int day, int hour, int minute, int second);
+
+    short pack_date();
+    short pack_time();
+};
 
 class File_name
 {

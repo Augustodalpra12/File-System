@@ -5,21 +5,8 @@
 #include <cmath>
 #include <ctime>
 #include "../Boot_reading/boot.h"
-#include "./file_name.h"
+#include "../Assets/assets.h"
 using namespace std;
-
-struct NODE
-{
-    int cluster_number;
-    NODE* next;
-};
-
-struct Date_Hour
-{
-    short date;
-    short time;
-};
-
 class data_write
 {
 private:

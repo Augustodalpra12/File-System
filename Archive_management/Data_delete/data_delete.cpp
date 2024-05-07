@@ -94,7 +94,6 @@ void data_delete::flip_bit(int mode, int position, FILE *partition)
     char bit;
     int root_in_sectors = ceil((this->boot.get_root_entry_count() * 32.0) / this->boot.get_bytes_per_sector());
     int root_and_boot_clusters = ceil((root_in_sectors + 1.0) / this->boot.get_sectors_per_cluster());
-    cout << "position: " << position << endl;
     int bitmap_start = this->boot.get_bytes_per_sector() * root_and_boot_clusters;
     switch (position % 8)
     {

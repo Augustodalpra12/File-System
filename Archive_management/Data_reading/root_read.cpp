@@ -208,7 +208,7 @@ void root_read::read_all_files(FILE *partition)
     {
         read_data(partition);
         int data_type = get_data_type();
-        if (data_type == 19)
+        if (data_type == 0x12)
         {
             string fileName = get_file_name();
             cout << "filename: " << fileName << endl;

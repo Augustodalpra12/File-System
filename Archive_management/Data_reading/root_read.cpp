@@ -43,7 +43,6 @@ int root_read::is_index_valid(int index)
     for (const auto &entry : root_directory_map)
     {
         int aux_index = entry.first;
-        cout << "aux_index: " << aux_index << " index: " << index << endl;
         if (aux_index == index && entry.second != "")
         {
             return 1;
@@ -176,7 +175,6 @@ void root_read::read_all_files(FILE *partition)
     boot_record boot;
     boot.read_boot_record(partition);
     int root_directories_entries = boot.get_root_entry_count();
-    cout << "root entries: " << root_directories_entries << endl;
     int currentEntryIndex = 0;
     cout << "Displaying all files" << endl;
     fseek(partition, boot.get_bytes_per_sector(), SEEK_SET);
@@ -187,7 +185,6 @@ void root_read::read_all_files(FILE *partition)
         if (data_type == 18)
         {
             string fileName = get_file_name();
-            cout << "filename: " << fileName << endl;
             this->root_directory_map[currentEntryIndex] = fileName;
         }
 
@@ -278,7 +275,6 @@ void root_read::read_archive(FILE *partition)
 
     FILE *new_file;
     new_file = fopen(name.c_str(), "w+");
-    cout << "file_name" << name << endl;
 
     while (bytes_read < this->get_file_size())
     {

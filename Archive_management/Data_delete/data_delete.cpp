@@ -28,7 +28,6 @@ void data_delete ::delete_file(FILE *partition)
     }
     archiveIndex = get_valid_index();
 
-    cout << "boot record: " << this->boot.get_bytes_per_sector() << endl;
     fseek(partition, boot.get_bytes_per_sector() + (sizeof(root_directory) * archiveIndex), SEEK_SET);
     read_data(partition);
     // duvida vai pegar o root do delete ou do read?
@@ -42,7 +41,6 @@ void data_delete ::get_file_clusters(FILE *partition)
 {
     int cluster_size = this->boot.get_sectors_per_cluster() * this->boot.get_bytes_per_sector();
     int first_cluster = this->get_first_cluster();
-    cout << "first cluster: " << first_cluster << endl;
     this->file_clusters.cluster_number = first_cluster;
     this->file_clusters.next = NULL;
 
@@ -53,13 +51,11 @@ void data_delete ::get_file_clusters(FILE *partition)
     int bitmap_size_bytes = this->boot.get_bitmap_in_clusters() * cluster_size;
 
     int first_cluster_in_bytes = first_cluster * cluster_size;
-    cout << "first_cluster_in_bytes: " << first_cluster_in_bytes << endl;
     int pointer_to_next_cluster = cluster_size - 4;
 
     int first_pointer_position_bytes = first_cluster_in_bytes + pointer_to_next_cluster;
 
     fseek(partition, first_pointer_position_bytes, SEEK_SET);
-    cout << "pointer_position_bytes1: " << first_pointer_position_bytes << endl;
     int pointer = -1;
     fread(&pointer, sizeof(int), 1, partition);
     // cout << "pointer: " << pointer << endl;
@@ -67,13 +63,11 @@ void data_delete ::get_file_clusters(FILE *partition)
 
     while (pointer != 0)
     {
-        cout << "pointer: " << pointer << endl;
 
         NODE *nextNode = new NODE;
         nextNode->next = NULL;
         nextNode->cluster_number = pointer;
-        cout << "nextNODE: " << nextNode->cluster_number << endl;
-        cout << "Current NODE: " << aux->cluster_number << endl;
+
         aux->next = nextNode;
         aux = nextNode;
 
@@ -82,7 +76,6 @@ void data_delete ::get_file_clusters(FILE *partition)
         // cout << "pointer_position_bytes2: " << pointer_position_bytes << endl;
         fseek(partition, next_cluster_in_bytes, SEEK_SET);
         fread(&pointer, sizeof(int), 1, partition);
-        cout << "pointer: " << pointer << endl;
     }
 }
 

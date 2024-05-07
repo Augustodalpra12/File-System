@@ -294,6 +294,7 @@ void root_read::read_archive(FILE *partition)
         }
     }
     cout << endl;
+    fclose(new_file);
     // while (1)
     // {
     //     fread(&data, cluster_size - 4, 1, partition);

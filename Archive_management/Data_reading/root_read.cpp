@@ -15,7 +15,8 @@ root_read::root_read(FILE *partition)
 
     int index;
     read_all_files(partition);
-
+    check_map_size();
+    cout << "READING..." << endl;
     index = get_valid_index();
     search_data(partition, index);
     read_data(partition);
@@ -23,26 +24,35 @@ root_read::root_read(FILE *partition)
     read_archive(partition);
 }
 
+void root_read::check_map_size()
+{
+    if (this->root_directory_map.size() == 0)
+    {
+        cout << "No files in the root directory" << endl;
+        return;
+    }
+}
 int root_read::is_index_valid(int index)
 {
 
     for (const auto &entry : root_directory_map)
     {
         int aux_index = entry.first;
-        if (aux_index == index)
+        cout << "aux_index: " << aux_index << " index: " << index << endl;
+        if (aux_index == index && entry.second != "")
         {
             return 1;
         }
         cout << "Index: " << index << ", File Name: " << endl;
     }
+    return 0;
 }
 int root_read::get_valid_index()
 {
     int index;
-
     do
     {
-        cout << "Enter File Index to read: " << endl;
+        cout << "Enter Valid File Index " << endl;
         cin >> index;
 
     } while (!is_index_valid(index));
@@ -144,6 +154,7 @@ int root_read::get_file_size()
 
 string root_read::get_file_name()
 {
+
     return this->root.file_name;
 }
 
@@ -168,7 +179,7 @@ void root_read::read_all_files(FILE *partition)
     {
         read_data(partition);
         int data_type = get_data_type();
-        if (data_type == 0x12)
+        if (data_type == 18)
         {
             string fileName = get_file_name();
             cout << "filename: " << fileName << endl;
@@ -209,7 +220,10 @@ void root_read::read_data(FILE *partition)
     fread(&this->root.date_modified, 2, 1, partition);
     fread(&this->root.first_cluster, 4, 1, partition);
     fread(&this->root.file_size, 4, 1, partition);
-    fread(&this->root.file_name, 13, 1, partition);
+    for (int i = 0; i < 13; i++)
+    {
+        fread(&this->root.file_name[i], 1, 1, partition);
+    }
 }
 
 void root_read::update_metadata(int index, FILE *partition)
@@ -240,10 +254,13 @@ void root_read::read_archive(FILE *partition)
     File_name file_name;
     boot_record boot;
 
-    file_name.set_name(this->get_file_name());
-    string name = file_name.get_name();
-    string extension = file_name.get_extension();
-    name += "." + extension;
+    // file_name.set_name_to_new_file(this->get_file_name());
+    // string name = file_name.get_name();
+    // string extension = file_name.get_extension();
+    string name;
+    cout << "Input new file name: ";
+    cin >> name;
+    cout << endl;
 
     boot.read_boot_record(partition);
     int cluster_size = boot.get_sectors_per_cluster() * boot.get_bytes_per_sector();
@@ -256,6 +273,7 @@ void root_read::read_archive(FILE *partition)
 
     FILE *new_file;
     new_file = fopen(name.c_str(), "w+");
+    cout << "file_name" << name << endl;
 
     while (bytes_read < this->get_file_size())
     {
@@ -266,8 +284,6 @@ void root_read::read_archive(FILE *partition)
 
         if (bytes_read > this->get_file_size())
             write_size -= (bytes_read - this->get_file_size());
-        cout << endl
-             << "write size" << write_size << endl;
 
         fread(&pointer, sizeof(4), 1, partition);
         for (int i = 0; i < write_size; i++)

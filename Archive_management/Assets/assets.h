@@ -9,7 +9,7 @@ using namespace std;
 struct NODE
 {
     int cluster_number;
-    NODE* next;
+    NODE *next;
 };
 
 struct Date_Hour
@@ -27,6 +27,7 @@ private:
     int hour;
     int minute;
     int second;
+
 public:
     pack(int year, int month, int day, int hour, int minute, int second);
 
@@ -53,8 +54,9 @@ public:
     string get_extension();
 
     void set_name(string fullname);
+    void set_name_to_new_file(string fullname);
 
-    int is_name_valid();    
+    int is_name_valid();
 };
 
 #endif

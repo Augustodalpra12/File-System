@@ -21,6 +21,7 @@ void data_delete ::delete_file(FILE *partition)
     cout << "Choose file to be deleted: ";
     // usuario vai escolher o int que vai ser deletado
     int archiveIndex;
+    check_map_size();
     archiveIndex = get_valid_index();
 
     cout << "boot record: " << this->boot.get_bytes_per_sector() << endl;

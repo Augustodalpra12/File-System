@@ -13,7 +13,7 @@ pack::pack(int year, int month, int day, int hour, int minute, int second)
 short pack::pack_date()
 {
     short packed_date = 0;
-    packed_date |= ((year - 2000) & 0x7F) << 9; // Representa 
+    packed_date |= ((year - 2000) & 0x7F) << 9; // Representa
     packed_date |= (month & 0xF) << 5;
     packed_date |= (day & 0x1F);
 
@@ -64,7 +64,7 @@ void File_name::set_name(string fullname)
 
         this->name_size = name.size();
         this->extension_size = extension.size();
-    } 
+    }
     else
     {
         this->name = fullname;
@@ -75,11 +75,28 @@ void File_name::set_name(string fullname)
     }
 }
 
+void File_name::set_name_to_new_file(string fullname)
+{
+    int first_zero = fullname.find_first_of('\0');
+    int last_zero = fullname.find_last_of('\0');
+    cout << "aqui1" << endl;
+    if (first_zero != string::npos)
+    {
+        this->name = fullname.substr(0, first_zero);
+        this->extension = fullname.substr(last_zero + 1);
+    }
+    else
+    {
+        this->name = fullname.substr(0, 10);
+        this->extension = fullname.substr(10);
+    }
+}
 
-int File_name::is_name_valid(){
+int File_name::is_name_valid()
+{
     if (get_name_size() > 10)
         return 0;
-    
+
     if (get_extension_size() > 3)
         return 0;
 

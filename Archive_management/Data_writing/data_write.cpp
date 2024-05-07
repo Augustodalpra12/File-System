@@ -8,9 +8,7 @@ data_write::data_write(boot_record boot, FILE *file)
     this->file_clusters.next = NULL;
 
     get_file();
-    cout << "File name: " << this->file_name << endl;
     get_file_size();
-    cout << "File size: " << this->file_size << endl;
 
     if (!check_available_clusters())
         return;
@@ -154,8 +152,6 @@ void data_write::write_file()
         if (bytes_read > this->file_size)
             write_size -= (bytes_read - this->file_size);
 
-        cout << "write size" << write_size << endl;
-
         int cluster_in_bytes = cluster->cluster_number * (cluster_size + 4);
         fseek(this->partition, cluster_in_bytes, SEEK_SET);
         fwrite(&full_file, write_size, 1, this->partition);
@@ -264,12 +260,10 @@ void data_write::set_file_size()
 void data_write::set_filename()
 {
     string name = string(this->name_to_root.get_name());
-    cout << name << endl;
     fwrite(name.c_str(), name.size(), 1, this->partition);
 
     fseek(this->partition, (10 - name.size()), SEEK_CUR);
     string extension = this->name_to_root.get_extension();
-    cout << extension << endl;
     fwrite(extension.c_str(), extension.size(), 1, this->partition);
 }
 

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-struct boot_record
+struct boot
 {
     char partition_name[8];
     unsigned short bytes_per_sector;
@@ -18,7 +18,7 @@ struct boot_record
 class formater
 {
 private:
-    boot_record boot;
+    boot boot;
     int root_in_sectors;
 
     int bitmap_start;
@@ -41,10 +41,7 @@ private:
     char final_bitmap_bits(int remaining_bits);
 
     int get_root_dir_in_sectors();
-public:
-    formater(const string& filename);
-    formater(const formater& F);
-    ~formater();
+
     int create_partition_file();
     int expand_file_size();
 
@@ -57,4 +54,11 @@ public:
 
     void write_test(string text);
     void write_boot_record();
-};//0x001A1A40
+public:
+    formater();
+    formater(const string& filename);
+    formater(const formater& F);
+    ~formater();
+
+    string get_filename();
+};

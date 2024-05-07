@@ -7,6 +7,8 @@ data_write::data_write(boot_record boot, FILE *file)
     this->file_clusters.cluster_number = -1;
     this->file_clusters.next = NULL;
 
+    fseek(this->partition, 0, SEEK_SET);
+
     get_file();
     get_file_size();
 

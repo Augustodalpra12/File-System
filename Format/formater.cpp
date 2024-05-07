@@ -1,4 +1,109 @@
 #include "formater.h"
+struct partition_name
+{
+    char name[8];
+};
+
+
+string get_file_name()
+{
+    string full_name;
+    cout << "Insert the name of the new file: " << endl;
+    string filename;
+    cin >> filename;
+
+    full_name = filename;
+    full_name += ".img";
+    
+    return full_name;
+}
+
+int get_file_size()
+{
+    long file_size_mb;
+    cout << "Insert the size of the partition (in mb): " << endl;
+    cin >> file_size_mb;
+
+    return file_size_mb;
+}
+
+partition_name get_partition_name()
+{
+    cout << "Insert the name of the partition: " << endl;
+    partition_name partition_name;
+    cin >> partition_name.name;
+    return partition_name;
+}
+
+int response_is_valid(char response)
+{
+    return (response == 'y' || response == 'n');
+}
+
+int specify_bytes_per_sector()
+{
+    return 512;
+    cout << "Do you want to especify a size for the sectors? y/n" << endl;
+    char response;
+    do
+    {
+        cin >> response;
+    } while (!response_is_valid(response));
+    
+    int bytes_per_sector = 512;
+    if (response == 'y')
+    {
+        cout << "How many bytes will a sector have?" << endl;
+        cin >> bytes_per_sector;
+    }
+    return bytes_per_sector;
+}
+
+int specify_sector_per_cluster()
+{
+    return 1;
+    cout << "Do you want to especify how many sectors per cluster? y/n" << endl;
+    char response;
+    do
+    {
+        cin >> response;
+    } while (!response_is_valid(response));
+
+    int sectors_per_cluster = 1;
+    if (response == 'y')
+    {
+        cout << "How many sectors will a cluster have?" << endl;
+        cin >> sectors_per_cluster;
+    }
+
+    return sectors_per_cluster;
+}
+
+formater::formater()
+{
+    this->archive_name = get_file_name();
+    create_partition_file();
+    if(!this->archive_is_open())
+    {
+        cout << "Error creating the file" << endl;
+        return;
+    }
+
+    this->set_file_size(get_file_size());
+    this->expand_file_size();
+
+    partition_name partition = get_partition_name();
+
+    this->set_partition_name(partition.name);
+
+    int sectors_per_cluster = specify_sector_per_cluster();
+    int bytes_per_sector = specify_bytes_per_sector();
+    
+    cout << "Formating partition..." << endl;
+    this->format_partition(sectors_per_cluster, bytes_per_sector);
+
+    cout << "Disk formated!" << endl;
+}
 
 formater::formater(const string& filename)
 {   
@@ -12,13 +117,14 @@ formater::formater(const formater& F)
     this->partition_size_in_bytes = F.partition_size_in_bytes;
     this->root_in_sectors = F.root_in_sectors;
     this->archive_name = F.archive_name;
-    if (!this->create_partition_file())
-        return;
+    this->create_partition_file();
+
 }
+
+
 
 formater::~formater()
 {
-    cout << "Deleting formater." << endl;
     if (partition.is_open())
         partition.close();
 }
@@ -146,12 +252,13 @@ int formater::set_bitmap()
     // Pega o tamanho do bitmap e ve o espaço que ta sobrando no cluster
     // NÃO TA FAZENDO CERTO ISSO, TA CORTANDO UM BYTE NO FINAL, PERCA DE 1 A 8 CLUSTERS
     
-    char one = -1;
+    char blank = 0xFF;
     for (int i = 0; i < invalid_spaces; i++)
     {
-        partition.write(&one, 1);
+        partition.write(&blank, 1);
     }
     
+
     return 0;
 }
 
@@ -216,4 +323,9 @@ void formater::write_boot_record()
     partition.write((char*)&boot.sectors_per_cluster, 1);
     partition.write((char*)&boot.root_entries, 2);
     partition.write((char*)&boot.bitmap_size_in_clusters, 4);
+}
+
+string formater::get_filename()
+{
+    return archive_name;
 }

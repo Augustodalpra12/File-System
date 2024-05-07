@@ -11,7 +11,6 @@ struct partition_name
     char name[8];
 };
 
-
 string get_file_name()
 {
     string full_name = "..\\";
@@ -21,7 +20,7 @@ string get_file_name()
 
     full_name += filename;
     full_name += ".img";
-    
+
     return full_name;
 }
 
@@ -55,7 +54,7 @@ int specify_bytes_per_sector()
     {
         cin >> response;
     } while (!response_is_valid(response));
-    
+
     int bytes_per_sector = 512;
     if (response == 'y')
     {
@@ -87,7 +86,7 @@ int specify_sector_per_cluster()
 int main()
 {
     formater new_disk(get_file_name());
-    if(!new_disk.archive_is_open())
+    if (!new_disk.archive_is_open())
     {
         cout << "Error creating the file" << endl;
         return 0;
@@ -100,9 +99,9 @@ int main()
 
     new_disk.set_partition_name(partition.name);
 
-    int sectors_per_cluster = specify_sector_per_cluster();
-    int bytes_per_sector = specify_bytes_per_sector();
-    
+    int sectors_per_cluster = 1;
+    int bytes_per_sector = 512;
+
     cout << "Formatando partição" << endl;
     new_disk.format_partition(sectors_per_cluster, bytes_per_sector);
 

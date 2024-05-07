@@ -48,6 +48,8 @@ public:
     void print_file_size();
     void print_file_name();
     void print_archive_info();
+    int get_valid_index();
+    int is_index_valid(int index);
     // void update_last_access(FILE *partition);
     // short pack_date(int year, int month, int day);
     // short pack_time(int hour, int minute, int second);

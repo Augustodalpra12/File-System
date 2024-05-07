@@ -15,13 +15,38 @@ root_read::root_read(FILE *partition)
 
     int index;
     read_all_files(partition);
-    cout << "Enter File Index to read: " << endl;
-    cin >> index;
+
+    index = get_valid_index();
     search_data(partition, index);
     read_data(partition);
     read_archive(partition);
 }
 
+int root_read::is_index_valid(int index)
+{
+
+    for (const auto &entry : root_directory_map)
+    {
+        int aux_index = entry.first;
+        if (aux_index == index)
+        {
+            return 1;
+        }
+        cout << "Index: " << index << ", File Name: " << endl;
+    }
+}
+int root_read::get_valid_index()
+{
+    int index;
+
+    do
+    {
+        cout << "Enter File Index to read: " << endl;
+        cin >> index;
+
+    } while (!is_index_valid(index));
+    return index;
+}
 // tm *root_read::get_now()
 // {
 //     time_t now = time(nullptr);
